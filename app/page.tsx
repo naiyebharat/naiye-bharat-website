@@ -392,7 +392,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="w-full overflow-hidden h-auto md:h-[600px]">
-                <Image src="/img/justice.PNG" alt="Lady Justice" width={600} height={800} className="w-full h-full object-cover" />
+                <Image src="/img/justice.png" alt="Lady Justice" width={600} height={800} className="w-full h-full object-cover" />
               </div>
             </div>
           </div>
