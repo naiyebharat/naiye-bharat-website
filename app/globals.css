@@ -1,26 +1,228 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fdfcfb;
+  --foreground: #020617;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme default {
+  /* Premium Oxford Blue & Gold Theme */
+  --color-oxford-900: #020617;
+  --color-oxford-800: #050b1d; 
+  --color-oxford-700: #0f172a;
+  --color-oxford-600: #1e293b;
+  
+  --color-gold-400: #fbd38d;
+  --color-gold-500: #d4af37; /* Primary Gold */
+  --color-gold-600: #b49129;
+  --color-gold-700: #8c701d;
+
+  --color-brand-dark: #0b1329;
+  --color-brand-input-dark: #050b1d;
+  --color-brand-emerald-dark: #00c2a8;
+
+  --color-emergency: #b91c1c;
+  --color-emergency-hover: #991b1b;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
+
+  /* Premium Utility Shadows */
+  --shadow-gold: 0 10px 30px -10px rgba(212, 175, 55, 0.4);
+  --shadow-oxford: 0 20px 40px -15px rgba(2, 6, 23, 0.5);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+@variant dark (&:where(.dark, .dark *));
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply selection:bg-gold-500/30 selection:text-oxford-900;
+}
+
+/* Glassmorphism Pro */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(200%);
+  -webkit-backdrop-filter: blur(12px) saturate(200%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Gradients */
+.gradient-gold {
+  background: linear-gradient(135deg, #fbd38d 0%, #d4af37 50%, #8c701d 100%);
+}
+
+.brand-gradient {
+  background: linear-gradient(to right, #60a5fa, #a78bfa, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes halo-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(185, 28, 28, 0.4); }
+  70% { box-shadow: 0 0 0 20px rgba(185, 28, 28, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(185, 28, 28, 0); }
+}
+
+.animate-halo {
+  animation: halo-pulse 2s infinite;
+}
+
+/* SOS Nav Action Animation */
+@keyframes sos-lite-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.animate-sos-lite {
+  animation: sos-lite-pulse 2s infinite;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite linear;
+}
+
+@keyframes float-particle {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+  33% { transform: translate(40px, -60px) scale(1.2); opacity: 0.6; }
+  66% { transform: translate(-20px, -120px) scale(0.8); opacity: 0.2; }
+}
+
+.particle {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float-particle 15s infinite ease-in-out;
+}
+
+/* Marquee / Infinite Scroll - 3x duplication for seamless loops */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.33%); } 
+}
+
+@keyframes marquee-reverse {
+  0% { transform: translateX(-33.33%); }
+  100% { transform: translateX(0); }
+}
+
+.animate-marquee {
+  animation: marquee 50s linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse 60s linear infinite;
+}
+
+.pause-on-hover:hover .animate-marquee,
+.pause-on-hover:hover .animate-marquee-reverse {
+  animation-play-state: paused;
+}
+
+/* Hero Section Depth */
+.hero-gradient {
+  background: radial-gradient(circle at top left, #1e3a8a, #111827);
+}
+
+@keyframes sos-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Premium Form Input */
+.case-input {
+  @apply w-full px-8 py-5 rounded-2xl bg-slate-50 border border-slate-100 focus:border-gold-500 focus:bg-white outline-none transition-all text-sm font-medium shadow-inner;
+}
+
+/* Text Reveal Animation Hooks */
+.reveal-text {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Custom Premium Scrollbar Utility */
+@layer utilities {
+  /* For Chrome, Safari and Opera */
+  .scrollbar-premium::-webkit-scrollbar {
+    width: 6px; /* Vertical scrollbar width strictly thin */
+    height: 6px; /* Horizontal scrollbar height */
+  }
+
+  /* Scrollbar Track (Background) */
+  .scrollbar-premium::-webkit-scrollbar-track {
+    background: transparent; /* Light mode mein background dynamic discrete rahega */
+  }
+  :is(.dark) .scrollbar-premium::-webkit-scrollbar-track {
+    background: rgba(5, 11, 29, 0.3); /* Dark mode matrix infrastructure grid matching background */
+  }
+
+  /* Scrollbar Thumb (Dragging handle) */
+  .scrollbar-premium::-webkit-scrollbar-thumb {
+    background-color: rgba(203, 213, 225, 1); /* Light mode sleek gray thumb */
+    border-radius: 100px;
+    border: 1px solid transparent;
+  }
+
+  /* Dark theme state active layer thumb swap */
+  :is(.dark) .scrollbar-premium::-webkit-scrollbar-thumb {
+    background-color: rgba(30, 41, 59, 0.8); /* Dark mode graphite accent track handle */
+  }
+
+  /* Hover transitions */
+  .scrollbar-premium::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 1);
+  }
+  :is(.dark) .scrollbar-premium::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(51, 65, 85, 1);
+  }
+
+  /* Firefox Support Line standard rules */
+  .scrollbar-premium {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(203, 213, 225, 1) transparent;
+  }
+  :is(.dark) .scrollbar-premium {
+    scrollbar-color: rgba(30, 41, 59, 0.8) rgba(5, 11, 29, 0.3);
+  }
+}
+
+/* Confirmation Popup / toast CSS */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out forwards;
 }
