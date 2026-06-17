@@ -343,7 +343,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-cascade" style={{animationDelay:"2.1s"}}>
               <a href="/counseling"  className="bg-white text-blue-700 px-8 py-3 rounded-md font-semibold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 interactive-bg">Book consultation</a>
-              <a href="/counseling" className="border-2 border-white text-white px-8 py-3 rounded-md font-semibold hover:bg-white hover:text-blue-700 transition-all transform hover:scale-105 interactive-bg">Mental health counselling</a>
+              <a href="/counselling" className="border-2 border-white text-white px-8 py-3 rounded-md font-semibold hover:bg-white hover:text-blue-700 transition-all transform hover:scale-105 interactive-bg">Mental health counselling</a>
             </div>
           </div>
           <div className="sos-banner" onClick={() => (window.location.href="/emergency")}>

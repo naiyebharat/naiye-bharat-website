@@ -1,303 +1,303 @@
 "use client";
+import { useState } from "react";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Image from "next/image";
-import { seededRandom } from "@/utils/random";
-
-const categories = [
+const faqsData = [
   {
-    title: "Mental Health Support",
-    desc: "Targeted strategies for stress, anxiety, overthinking, and emotional burnout.",
-    icon: "fa-brain",
-    color: "from-blue-500/10 to-transparent"
+    question: "Is counseling confidential?",
+    answer:
+      "Yes. All counseling sessions are strictly confidential. Your personal information and discussions are protected and shared only with your consent, except where disclosure is required by law.",
   },
   {
-    title: "Relationship Resolution",
-    desc: "Foster deep communication, resolve trust barriers, and heal together after conflict.",
-    icon: "fa-heart",
-    color: "from-red-500/10 to-transparent"
+    question: "Can counseling be done online or in person?",
+    answer:
+      "Yes. We offer both online and in-person counseling sessions. You can choose the mode that is most comfortable and convenient for you",
   },
   {
-    title: "Family Integrity",
-    desc: "Mediate parenting conflicts, generational stress, and interpersonal household dynamics.",
-    icon: "fa-people-roof",
-    color: "from-indigo-500/10 to-transparent"
+    question: "How many sessions are usually required?",
+    answer:
+      "The number of sessions depends on your concern and personal needs. Some issues may need only a few sessions, while others may require ongoing support.",
   },
   {
-    title: "Career Strategic Growth",
-    desc: "Professional guidance for career transitions, academic pressure, and high-performance motivation.",
-    icon: "fa-briefcase",
-    color: "from-orange-500/10 to-transparent"
+    question: "What issues can counseling help with?",
+    answer:
+      "Counseling can help with marital and family issues, emotional stress, anxiety, depression, trauma, domestic concerns, workplace stress, and challenges related to legal disputes",
   },
   {
-    title: "Trauma Recovery",
-    desc: "Surgical approach to fear, panic triggers, and rebuilding core confidence after hardship.",
-    icon: "fa-user-shield",
-    color: "from-yellow-500/10 to-transparent"
+    question: "What are the counseling charges?",
+    answer:
+      "Counseling charges vary based on the counselor's experience, session duration, and mode of consultation. We ensure transparent and affordable pricing with no hidden costs.",
   },
-  {
-    title: "Elite Personal Growth",
-    desc: "Advanced goal-setting, self-esteem cultivation, and neurological focus techniques.",
-    icon: "fa-seedling",
-    color: "from-green-500/10 to-transparent"
-  }
 ];
 
-const faqs = [
+const counsellingTypes = [
   {
-    q: "Is the counselling process privileged?",
-    a: "Absolutely. We treat counselling with the same level of legal privilege and record security as your advocate consultations. Your privacy is non-negotiable."
+    emoji: "🧠",
+    title: "Mental Health Counselling",
+    desc: "Support for stress, anxiety, overthinking, low mood, and emotional burnout.",
   },
   {
-    q: "Can I choose between virtual or physical sessions?",
-    a: "Yes. We offer secure, end-to-end encrypted video consultations or discreet in-person sessions at our private executive suites."
+    emoji: "❤️",
+    title: "Relationship Counselling",
+    desc: "Improve communication, trust, boundaries, and healing after conflicts or breakups.",
   },
   {
-    q: "What is the expected protocol for session counts?",
-    a: "Recovery and growth are non-linear. Some clients achieve strategic clarity in 4 sessions, while others maintain a high-performance monthly retainer."
+    emoji: "👨‍👩‍👧",
+    title: "Family Counselling",
+    desc: "Resolve family stress, parenting issues, generational conflicts, and emotional pressure.",
   },
   {
-    q: "Do you handle emotional distress from legal cases?",
-    a: "This is our specialization. We provide psychological support specifically tailored to clients undergoing intense legal litigation or high-stakes disputes."
+    emoji: "💼",
+    title: "Career & Study Counselling",
+    desc: "Guidance for career confusion, academic stress, motivation issues, and decision-making.",
   },
   {
-    q: "What are the professional investment tiers?",
-    a: "Standard sessions with our senior psychologists start at ₹1,499. We offer premium packages for long-term strategic mental wellness."
-  }
+    emoji: "🧘",
+    title: "Trauma & Healing Support",
+    desc: "Help for past emotional wounds, fear, panic triggers, and rebuilding confidence.",
+  },
+  {
+    emoji: "🌿",
+    title: "Self Growth Counselling",
+    desc: "Build self-esteem, set goals, improve habits, and feel more calm and focused daily.",
+  },
 ];
 
-export default function Counselling() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+export default function Home() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-
-    // Fade Up Animation
-    gsap.utils.toArray<HTMLElement>('.reveal-up').forEach(element => {
-      gsap.fromTo(element, 
-        { autoAlpha: 0, y: 40 }, 
-        {
-          autoAlpha: 1, 
-          y: 0, 
-          duration: 1.2, 
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: element,
-            start: "top 85%",
-            toggleActions: "play none none none"
-          }
-        }
-      );
-    });
-
-    // Staggered Fade Up
-    gsap.utils.toArray<HTMLElement>('.stagger-parent').forEach(parent => {
-      const children = parent.children;
-      gsap.fromTo(children, 
-        { autoAlpha: 0, y: 30 },
-        { 
-          autoAlpha: 1, 
-          y: 0, 
-          duration: 1, 
-          stagger: 0.15, 
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: parent,
-            start: "top 85%",
-            toggleActions: "play none none none"
-          }
-        }
-      );
-    });
-
-    return () => {
-      ScrollTrigger.getAll().forEach(t => t.kill());
-    };
-  }, []);
+  const toggleFaq = (index: number) => {
+    setOpenIndex((prev) => (prev === index ? null : index));
+  };
 
   return (
-    <main className="flex-1 bg-white overflow-hidden">
-      {/* 1. Cinematic Hero Section */}
-      <section className="relative hero-gradient min-h-[80vh] flex items-center justify-center overflow-hidden border-b-[10px] border-gold-500/20">
-        <div className="absolute inset-0 z-0 opacity-40">
-          {[...Array(20)].map((_, i) => (
-            <div 
-              key={i} 
-              className="particle" 
-              style={{ 
-                top: `${seededRandom(i * 5) * 100}%`, 
-                left: `${seededRandom(i * 5 + 1) * 100}%`,
-                animationDelay: `${seededRandom(i * 5 + 2) * 20}s`,
-                width: `${seededRandom(i * 5 + 3) * 4 + 2}px`,
-                height: `${seededRandom(i * 5 + 4) * 4 + 2}px`,
-                background: i % 2 === 0 ? '#d4af37' : 'white'
-              }} 
-            />
-          ))}
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+        * {
+          font-family: 'Poppins', sans-serif;
+        }
+
+        @keyframes rotate {
+          100% { transform: rotate(1turn); }
+        }
+
+        .rainbow::before {
+          content: '';
+          position: absolute;
+          z-index: -2;
+          left: -50%;
+          top: -50%;
+          width: 200%;
+          height: 200%;
+          background-position: 100% 50%;
+          background-repeat: no-repeat;
+          background-size: 50% 30%;
+          filter: blur(6px);
+          background-image: linear-gradient(#FF0A7F, #780EFF);
+          animation: rotate 4s linear infinite;
+        }
+      `}</style>
+
+      {/* ── HERO ── */}
+      <section className="bg-[url('https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/hero/gridBackground.png')] w-full bg-no-repeat bg-cover bg-center text-sm pb-44">
+        <div className="flex items-center gap-2 border border-slate-300 hover:border-slate-400/70 rounded-full w-max mx-auto px-4 py-2 mt-40 md:mt-32">
+          <span>New announcement on your inbox</span>
+          <button className="flex items-center gap-1 font-medium">
+            <span>Read more</span>
+            <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M3.959 9.5h11.083m0 0L9.501 3.958M15.042 9.5l-5.541 5.54"
+                stroke="#050040"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10 text-center flex flex-col items-center">
-          <div className="reveal-up mb-8">
-            <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full backdrop-blur-xl mb-8">
-              <span className="w-2 h-2 rounded-full bg-gold-500 animate-pulse"></span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gold-400">Mental Wellness Initiative</span>
-            </div>
-            <h1 className="text-5xl lg:text-8xl font-serif font-bold tracking-tight text-white mb-8 leading-[1.1]">
-              From Heavy Thoughts <br /> to a <span className="brand-gradient italic">Lighter Life</span>
-            </h1>
-          </div>
-          
-          <p className="reveal-up text-lg lg:text-xl text-slate-300 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
-            Private, judgment-free counselling for high-performance minds. Resolving complexity in mental health, relationships, and professional growth.
-          </p>
-          
-          <div className="reveal-up flex flex-col sm:flex-row gap-6 relative">
-            <Link href="/billing" className="group relative overflow-hidden bg-gold-500 text-oxford-900 px-12 py-5 rounded-full font-bold tracking-widest uppercase transition-all shadow-gold hover:scale-105 active:scale-95">
-              <span className="relative z-10 transition-colors group-hover:text-white">Book Therapy</span>
-              <div className="absolute inset-0 bg-oxford-800 transform translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
-            </Link>
-            <Link href="#about" className="bg-transparent border-2 border-white/30 text-white px-12 py-5 rounded-full font-bold tracking-widest uppercase hover:bg-white hover:text-oxford-900 transition-all backdrop-blur-sm">
-              Our Philosophy
-            </Link>
-          </div>
-        </div>
-      </section>
+        <h5 className="text-4xl md:text-7xl font-medium max-w-[850px] text-center mx-auto mt-8">
+          From heavy thoughts to a lighter life.
+        </h5>
 
-      {/* 2. Philosophy & Methodology Section */}
-      <section id="about" className="py-32 bg-white relative">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col lg:flex-row items-center gap-20">
-            <div className="lg:w-1/2 reveal-up">
-              <div className="relative rounded-[40px] overflow-hidden shadow-oxford aspect-[4/5]">
-                <Image 
-                  src="https://images.unsplash.com/photo-1527137342181-19aab11a8ee8?q=80&w=1000&auto=format&fit=crop" 
-                  width={800} 
-                  height={1000} 
-                  alt="High-fidelity therapy space" 
-                  className="w-full h-full object-cover grayscale transition-all duration-1000 hover:grayscale-0 hover:scale-110" 
+        <p className="text-sm md:text-base mx-auto max-w-2xl text-center mt-6 max-md:px-2">
+          Private, judgment-free counselling for every concern mental health, relationships, career, and personal growth.
+        </p>
+
+        <div className="mx-auto w-full flex items-center justify-center gap-3 mt-4">
+          <div className="rainbow relative z-0 overflow-hidden p-0.5 flex items-center justify-center rounded-full hover:scale-105 transition duration-300 active:scale-100">
+            <a
+              href="/counseling"
+              className="px-8 text-sm py-3 text-white rounded-full font-medium bg-gray-800 inline-block"
+            >
+              book councelling
+            </a>
+          </div>
+          <button className="flex items-center gap-2 border border-slate-300 hover:bg-slate-200/30 rounded-full px-6 py-3">
+            <a
+              href="https://en.wikipedia.org/wiki/Mental_health"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2"
+            >
+              <span>Learn More</span>
+              <svg width="6" height="8" viewBox="0 0 6 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M1.25.5 4.75 4l-3.5 3.5"
+                  stroke="#050040"
+                  strokeOpacity=".4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-oxford-900 via-transparent to-transparent opacity-60"></div>
-                <div className="absolute bottom-12 left-12 right-12">
-                   <div className="glass-panel p-8 rounded-3xl border border-white/20 flex items-center justify-between">
-                      <div className="flex -space-x-3">
-                        {[1,2,3].map(i => (
-                          <div key={i} className="w-10 h-10 rounded-full border-2 border-oxford-900 bg-slate-200 overflow-hidden relative">
-                            <Image src={`https://i.pravatar.cc/100?u=doc${i}`} alt="Specialist" width={40} height={40} />
-                          </div>
-                        ))}
-                      </div>
-                      <Link href="/login" className="bg-gold-500 text-oxford-900 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-colors">Career Access</Link>
-                   </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:w-1/2 stagger-parent">
-              <h2 className="text-sm font-black uppercase tracking-[0.4em] text-gold-600 mb-6">Our Methodology</h2>
-              <h3 className="text-5xl font-serif font-bold text-oxford-900 mb-10 leading-tight">Elite Psychological <br /> <span className="italic text-slate-400">Restoration & Growth.</span></h3>
-              
-              <div className="space-y-8 text-slate-500 font-light leading-relaxed text-lg">
-                <p>
-                  At NaiyeBharat, we recognize that mental wellness is as critical as legal security. We provide a sanctuary for high-stakes professionals and individuals undergoing complex life transitions.
-                </p>
-                <p>
-                  Our methodology prioritizes <strong>Absolute Confidentiality</strong>. We connect you with verified specialists who understand the intricate intersection of emotional well-being, stressful litigation, and corporate demand. This is not just therapy; it&apos;s a strategic investment in your resilience.
-                </p>
-              </div>
-
-              <div className="mt-12 grid grid-cols-2 gap-8 text-oxford-900">
-                <div className="space-y-2">
-                  <div className="text-3xl font-serif font-bold italic text-gold-600">100%</div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest">Privileged Data</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-3xl font-serif font-bold italic text-gold-600">Elite</div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest">Specialist Network</div>
-                </div>
-              </div>
-            </div>
-          </div>
+              </svg>
+            </a>
+          </button>
         </div>
       </section>
 
-      {/* 3. High-Fidelity Service Grid */}
-      <section className="py-32 bg-slate-50">
-        <div className="container mx-auto px-6 text-center mb-24 reveal-up">
-           <div className="inline-block px-4 py-1.5 bg-white border border-slate-100 rounded-full text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-6">
-             Specialized Modalities
-           </div>
-           <h2 className="text-5xl md:text-7xl font-serif font-bold text-oxford-900">Therapeutic Sectors</h2>
-           <div className="w-24 h-1 bg-gold-500 mx-auto mt-8"></div>
-        </div>
-
-        <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8 stagger-parent">
-          {categories.map((cat, i) => (
-            <div key={i} className="group bg-white p-12 rounded-[40px] shadow-oxford border border-slate-50 hover:border-gold-500/20 transition-all duration-700 hover:-translate-y-4 flex flex-col relative overflow-hidden">
-               <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${cat.color} rounded-bl-[100px] transition-all duration-500 group-hover:scale-150 group-hover:opacity-40`}></div>
-               
-               <div className="w-16 h-16 rounded-2xl bg-oxford-900 flex items-center justify-center text-gold-500 mb-10 relative z-10 transition-transform duration-500 group-hover:scale-110">
-                 <i className={`fas ${cat.icon} text-2xl`}></i>
-               </div>
-               
-               <h3 className="text-2xl font-serif font-bold text-oxford-900 mb-4 relative z-10">{cat.title}</h3>
-               <p className="text-slate-500 leading-relaxed font-light text-sm relative z-10">{cat.desc}</p>
-               
-               <div className="mt-10 pt-8 border-t border-slate-100 flex items-center justify-between">
-                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:text-gold-600 transition-colors">Learn More</span>
-                 <i className="fas fa-arrow-right-long text-slate-200 group-hover:text-gold-500 transition-all group-hover:translate-x-2"></i>
-               </div>
+      {/* ── WHAT WE DO ── */}
+      <section className="flex flex-col md:flex-row items-center justify-center gap-10 max-md:px-4 mt-10">
+        <div className="relative shadow-2xl shadow-indigo-600/40 rounded-2xl overflow-hidden shrink-0">
+          <img
+            className="max-w-md w-full object-cover rounded-2xl"
+            src="https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?q=80&w=451&h=451&auto=format&fit=crop"
+            alt=""
+          />
+          <div className="flex items-center gap-1 max-w-72 absolute bottom-8 left-8 bg-white p-4 rounded-xl">
+            <div className="flex -space-x-4 shrink-0">
+              <img
+                src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200"
+                alt="image"
+                className="size-9 rounded-full border-[3px] border-white hover:-translate-y-1 transition z-1"
+              />
+              <img
+                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200"
+                alt="image"
+                className="size-9 rounded-full border-[3px] border-white hover:-translate-y-1 transition z-[2]"
+              />
+              <img
+                src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&h=200&auto=format&fit=crop"
+                alt="image"
+                className="size-9 rounded-full border-[3px] border-white hover:-translate-y-1 transition z-[3]"
+              />
+              <div className="flex items-center justify-center text-xs text-white size-9 rounded-full border-[3px] border-white bg-indigo-600 hover:-translate-y-1 transition z-[4]"></div>
             </div>
-          ))}
+            <a
+              href="/404.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition"
+            >
+              Join us as a counsellor
+            </a>
+          </div>
+        </div>
+        <div className="text-sm text-slate-600 max-w-lg">
+          <h1 className="text-xl uppercase font-semibold text-slate-700">What we do?</h1>
+          <div className="w-24 h-[3px] rounded-full bg-gradient-to-r from-indigo-600 to-[#DDD9FF]"></div>
+          <p className="mt-8">
+            We provide confidential, professional, and empathetic counseling to individuals and families facing personal, emotional, or legal-related challenges
+          </p>
+          <p className="mt-4">
+            Our counseling services are designed to help clients understand their situation clearly, manage stress, and make informed decisions with confidence. We connect you with trained and experienced counselors who listen without judgment and offer practical guidance tailored to your needs.
+          </p>
+          <p className="mt-4">
+            Whether you are dealing with marital issues, domestic concerns, workplace stress, trauma, or emotional distress arising from legal disputes, we ensure a safe and supportive environment. Our approach focuses on emotional well-being, clarity of thought, and empowerment, helping you regain control, build resilience, and move forward with dignity and strength while maintaining complete privacy and trust.
+          </p>
+          <a
+            href="#"
+            className="flex items-center w-max gap-2 mt-8 hover:-translate-y-0.5 transition bg-gradient-to-r from-indigo-600 to-[#8A7DFF] py-3 px-8 rounded-full text-white"
+          >
+            <span>Read more</span>
+            <svg width="13" height="12" viewBox="0 0 13 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M12.53 6.53a.75.75 0 0 0 0-1.06L7.757.697a.75.75 0 1 0-1.06 1.06L10.939 6l-4.242 4.243a.75.75 0 0 0 1.06 1.06zM0 6v.75h12v-1.5H0z"
+                fill="#fff"
+              />
+            </svg>
+          </a>
         </div>
       </section>
 
-      {/* 4. Strategic FAQ Section */}
-      <section className="py-32 bg-white relative">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <div className="text-center mb-20 reveal-up">
-            <h2 className="text-5xl font-serif font-bold text-oxford-900 mb-6">Protocols & Insight</h2>
-            <p className="text-slate-400 font-light italic">&quot;Total transparency is the first step toward restoration.&quot;</p>
-            <div className="w-16 h-1 bg-gold-500 mx-auto mt-8"></div>
+      {/* ── TYPES OF COUNSELLING ── */}
+      <section className="w-full bg-[#fbfbf6] py-20">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-14">
+            <h2 className="text-4xl font-bold text-black">Types of Counselling We Provide</h2>
+            <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
+              Safe, private and judgement-free sessions to help you feel lighter, clearer, and more in control.
+            </p>
           </div>
 
-          <div className="space-y-6 stagger-parent">
-            {faqs.map((faq, i) => (
-              <div key={i} className="group border-b border-slate-100 transition-all">
-                <button 
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full py-8 text-left flex justify-between items-center transition-all group-hover:pl-4"
-                >
-                  <span className={`font-serif font-bold text-xl transition-all ${openFaq === i ? 'text-gold-600' : 'text-oxford-900'}`}>{faq.q}</span>
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${openFaq === i ? 'bg-oxford-900 border-oxford-900 text-gold-500 rotate-180' : 'border-slate-100 text-slate-300'}`}>
-                    <i className="fas fa-chevron-down text-xs"></i>
-                  </div>
-                </button>
-                <div className={`transition-all duration-700 ease-in-out overflow-hidden ${openFaq === i ? 'max-h-96 opacity-100 mb-8' : 'max-h-0 opacity-0'}`}>
-                  <div className="px-4 text-slate-500 font-light leading-relaxed text-lg border-l-2 border-gold-500/20 ml-2">
-                    {faq.a}
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-14">
+            {counsellingTypes.map(({ emoji, title, desc }) => (
+              <div className="text-center" key={title}>
+                <div className="w-12 h-12 mx-auto flex items-center justify-center rounded-lg bg-white border border-blue-200 text-xl">
+                  {emoji}
                 </div>
+                <h3 className="mt-5 text-lg font-semibold text-gray-900">{title}</h3>
+                <p className="mt-2 text-gray-500 text-sm leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* High-Impact CTA */}
-      <section className="py-32 bg-oxford-900 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_120%,#d4af37,transparent)]"></div>
+      {/* ── BANNER IMAGE ── */}
+      <img
+        src="/img/ChatGPT Image Jan 25, 2026, 02_39_37 AM.png"
+        alt=""
+        className="w-[95%] mx-auto h-[180px] md:h-[650px] object-cover rounded-2xl"
+      />
+
+      {/* ── FAQ ── */}
+      <div className="w-full flex flex-col items-center text-center px-4 py-10 overflow-visible">
+        <p className="text-base font-medium text-slate-600">FAQ</p>
+        <h1 className="text-3xl md:text-4xl font-semibold mt-2">Frequently Asked Questions</h1>
+        <p className="text-sm text-slate-500 mt-4 max-w-sm">
+          Proactively answering FAQs boosts user confidence and cuts down on support tickets.
+        </p>
+
+        <div className="w-[95%] mx-auto mt-6 flex flex-col gap-4 items-start text-left">
+          {faqsData.map((faq, index) => {
+            const isOpen = openIndex === index;
+            return (
+              <div className="faq-item flex flex-col items-start w-full" key={index}>
+                <div
+                  className="faq-header flex items-center justify-between w-full cursor-pointer bg-slate-50 border border-slate-200 p-4 rounded transition-all"
+                  onClick={() => toggleFaq(index)}
+                >
+                  <h2 className="text-sm">{faq.question}</h2>
+                  <svg
+                    className={`faq-icon transition-all duration-500 ease-in-out ${isOpen ? "rotate-180" : ""}`}
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="m4.5 7.2 3.793 3.793a1 1 0 0 0 1.414 0L13.5 7.2"
+                      stroke="#1D293D"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <p
+                  className={`faq-answer text-sm text-slate-500 px-4 overflow-hidden transition-all duration-500 ease-in-out ${
+                    isOpen ? "opacity-100 max-h-[300px] translate-y-0 pt-4" : "opacity-0 max-h-0 -translate-y-2"
+                  }`}
+                >
+                  {faq.answer}
+                </p>
+              </div>
+            );
+          })}
         </div>
-        <div className="container mx-auto px-6 text-center relative z-10">
-           <h2 className="text-5xl md:text-7xl font-serif font-bold text-white mb-10 leading-tight reveal-up">Ready to find <br /> your <span className="brand-gradient italic">Center</span>?</h2>
-           <Link href="/billing" className="reveal-up inline-block bg-gold-500 text-oxford-900 px-16 py-6 rounded-full font-bold tracking-[0.2em] uppercase transition-all shadow-gold hover:scale-105 active:scale-95">
-             Iniate Consultation
-           </Link>
-        </div>
-      </section>
-    </main>
+      </div>
+    </>
   );
 }
