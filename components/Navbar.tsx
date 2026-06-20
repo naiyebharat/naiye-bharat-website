@@ -199,7 +199,7 @@ export default function Navbar() {
               <div className="hidden md:flex md:items-center space-x-6">
                 <a href="#home"    className="nav-link text-gray-700 hover:text-blue-600 font-medium transition-all duration-300">Home</a>
                 <a href="#about"   className="nav-link text-gray-700 hover:text-blue-600 font-medium transition-all duration-300">About Us</a>
-                <a href="prize.html" className="nav-link text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">Pricing</a>
+                <a href="/pricing" className="nav-link text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">Pricing</a>
 
                 {/* Services Dropdown */}
                 <div className="relative group">
@@ -219,7 +219,7 @@ export default function Navbar() {
                   </div>
                 </div>
 
-                <a href="#Contact" className="nav-link text-gray-700 hover:text-blue-600 font-medium transition-colors">Contact</a>
+                <a href="/counseling" className="nav-link text-gray-700 hover:text-blue-600 font-medium transition-colors">Contact</a>
               </div>
 
               {/* Dynamic Auth Button / Profile Section (Desktop and Mobile) */}
@@ -297,7 +297,7 @@ export default function Navbar() {
         <div id="mobile-menu" className="md:hidden hidden px-4 pt-2 pb-4 space-y-2 bg-white shadow-md border-t border-gray-100 transition-all duration-300">
           <a href="#home"    className="block text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">Home</a>
           <a href="#about"   className="block text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">About Us</a>
-          <a href="prize.html" className="block text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">Pricing</a>
+          <a href="/pricing" className="block text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">Pricing</a>
           <div>
             <button id="mobile-services-btn" className="w-full text-left flex justify-between items-center text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">
               Services
@@ -306,15 +306,15 @@ export default function Navbar() {
               </svg>
             </button>
             <div id="mobile-services-menu" style={{ maxHeight: "0px", overflow: "hidden", transition: "max-height 0.3s ease" }} className="pl-4 mt-1 space-y-1">
-              <a href="civil.html"     className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Civil Law</a>
-              <a href="criminal.html"  className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Criminal Law</a>
-              <a href="corporate.html" className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Corporate Law</a>
-              <a href="family.html"    className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Family Law</a>
-              <a href="property.html"  className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Property Law</a>
-              <a href="tax.html"       className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Court marriage</a>
+              <a href="/civil"     className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Civil Law</a>
+              <a href="/criminal"  className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Criminal Law</a>
+              <a href="/corporate" className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Corporate Law</a>
+              <a href="/family"    className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Family Law</a>
+              <a href="/property"  className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Property Law</a>
+              <a href="/tax"       className="block text-gray-600 hover:text-blue-600 py-1 transition-colors">Court marriage</a>
             </div>
           </div>
-          <a href="#Contact" className="block text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">Contact</a>
+          <a href="/counseling" className="block text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">Contact</a>
           
           {/* Dynamic Mobile Auth */}
           {isLoadingUser ? (

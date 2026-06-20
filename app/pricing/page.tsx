@@ -1,169 +1,209 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { seededRandom } from "@/utils/random";
+import { useRouter } from "next/navigation";
 
 export default function Pricing() {
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-
-    gsap.fromTo('.reveal-up', 
-      { autoAlpha: 0, y: 50 },
-      { 
-        autoAlpha: 1, 
-        y: 0, 
-        duration: 1.2, 
-        stagger: 0.2, 
-        ease: "power4.out" ,
-        scrollTrigger: {
-          trigger: '.reveal-up',
-          start: "top 85%"
-        }
-      }
-    );
-  }, []);
+  const router = useRouter();
 
   return (
-    <main className="flex-1 bg-white">
-      {/* Premium Hero Banner */}
-      <section className="relative hero-gradient py-24 flex items-center justify-center overflow-hidden border-b-8 border-gold-500/10">
-        <div className="absolute inset-0 z-0 opacity-20">
-          {[...Array(15)].map((_, i) => (
-            <div 
-              key={i} 
-              className="particle" 
-              style={{ 
-                top: `${seededRandom(i * 3) * 100}%`, 
-                left: `${seededRandom(i * 3 + 1) * 100}%`, 
-                animationDelay: `${seededRandom(i * 3 + 2) * 10}s` 
-              }} 
-            />
-          ))}
-        </div>
+    <section className="w-full px-4 py-14 bg-white">
+      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-10 lg:gap-16 items-start justify-between">
+        {/* LEFT CONTENT */}
+        <div className="w-full lg:max-w-sm">
+          <h3 className="font-domine text-3xl">OUR PRICING</h3>
 
-        <div className="container mx-auto px-6 relative z-10 text-center">
-          <div className="reveal-up">
-            <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 uppercase tracking-tight">
-              Transparent <span className="brand-gradient">Pricing</span>
-            </h1>
-            <div className="w-24 h-1 bg-gold-500 mx-auto"></div>
+          <p className="mt-4 text-sm/6 text-gray-500">
+            Choose a plan that fits your needs legal support + mental health
+            counselling. Every plan includes expert guidance, fast response, and
+            complete confidentiality
+          </p>
+
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center gap-3 text-gray-500">
+              <div className="p-2.5 border border-gray-200 rounded-md">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-sparkles size-5"
+                  aria-hidden="true"
+                >
+                  <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" />
+                  <path d="M20 2v4" />
+                  <path d="M22 4h-4" />
+                  <circle cx="4" cy="20" r="2" />
+                </svg>
+              </div>
+              <p>Legal help + mental health counselling</p>
+            </div>
+
+            <div className="flex items-center gap-3 text-gray-500">
+              <div className="p-2.5 border border-gray-200 rounded-md">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-zap size-5"
+                  aria-hidden="true"
+                >
+                  <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+                </svg>
+              </div>
+              <p>Quick response &amp; priority consultation</p>
+            </div>
+
+            <div className="flex items-center gap-3 text-gray-500">
+              <div className="p-2.5 border border-gray-200 rounded-md">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-shield-check size-5"
+                  aria-hidden="true"
+                >
+                  <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
+              </div>
+              <p>Transparent pricing with full privacy</p>
+            </div>
           </div>
         </div>
-      </section>
 
-      <section className="py-24 px-6 md:px-12 bg-white">
-        <div className="max-w-7xl mx-auto">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-            
-            {/* Left Column - Intro Material */}
-            <div className="lg:sticky lg:top-32 reveal-up">
-              <h2 className="text-xs font-bold tracking-[0.4em] text-gold-600 uppercase mb-4">Investment in Justice</h2>
-              <h3 className="text-4xl font-serif font-bold text-oxford-900 mb-8">Our Fee Structure</h3>
-              <p className="text-slate-600 mb-10 leading-relaxed font-light text-lg">
-                We believe in complete financial transparency. Our platform fees are designed to bridge the gap between 
-                top-tier legal expertise and those who need it most.
+        {/* RIGHT CARDS */}
+        <div className="w-full flex flex-col lg:flex-row items-stretch justify-center gap-10">
+          {/* QUICK CONSULTATION PLAN */}
+          <div className="group w-full lg:w-[360px] rounded-xl p-6 pb-10 bg-white border border-slate-200">
+            <div className="flex flex-col items-center justify-center text-center">
+              <h3 className="text-lg font-semibold">Quick consultation</h3>
+              <p className="text-gray-500">
+                a platform fee to connect you with a legal expert
               </p>
 
-              <div className="space-y-6">
-                {[
-                  { icon: "fas fa-handshake", text: "Integrated Legal & Mental Health Support" },
-                  { icon: "fas fa-bolt", text: "Priority Scheduling & Fast Response" },
-                  { icon: "fas fa-shield-alt", text: "Secure, Confidential Consultations" }
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-5 p-4 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-gold-500 shadow-sm">
-                      <i className={item.icon}></i>
-                    </div>
-                    <span className="text-oxford-800 font-medium text-sm">{item.text}</span>
-                  </div>
-                ))}
-              </div>
+              <p className="mt-4 text-2xl font-semibold">
+                ₹999
+                <span className="text-sm font-normal text-gray-500">/session</span>
+              </p>
+
+              <button
+                onClick={() => router.push("/counseling")}
+                className="mt-4 w-full rounded-lg bg-gray-100 py-2.5 font-medium text-gray-800"
+              >
+                Get Started
+              </button>
             </div>
 
-            {/* Middle Card - Professional Template */}
-            <div className="reveal-up bg-white rounded-[40px] shadow-oxford border border-slate-100 p-10 flex flex-col hover:-translate-y-2 transition-all duration-500">
-              <div className="text-center mb-10">
-                <span className="px-4 py-1.5 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest rounded-full mb-6 inline-block">Standard Access</span>
-                <h3 className="text-2xl font-serif font-bold text-oxford-900 mb-4">Quick Consultation</h3>
-                <div className="flex items-baseline justify-center mb-8">
-                  <span className="text-5xl font-bold text-oxford-900">₹999</span>
-                  <span className="text-slate-400 ml-2 font-medium">/ session</span>
+            <div className="mt-2 flex flex-col">
+              {[
+                "expert consultation",
+                "Case review & issue analysis",
+                "Clear next-step action plan",
+                "100% confidential & secure",
+                "Document checklist support",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-2 border-b py-3 border-gray-200"
+                >
+                  <div className="rounded-full p-1 bg-gray-800">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-check size-3 text-white"
+                      aria-hidden="true"
+                    >
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  </div>
+                  {item}
                 </div>
-                <Link href="/billing" className="group relative w-full py-4 bg-oxford-900 text-gold-400 font-bold border border-gold-500/30 rounded-2xl text-center shadow-lg hover:shadow-gold-500/20 transition-all uppercase tracking-widest text-xs overflow-hidden block">
-                  <span className="relative z-10 group-hover:text-oxford-900 transition-colors">Book Legal Expert</span>
-                  <div className="absolute inset-0 bg-gold-500 transform translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
-                </Link>
-              </div>
-              
-              <div className="space-y-5 flex-1">
-                {[
-                  "Expert Advocate Consultation",
-                  "30-Minute Targeted Case Review",
-                  "Strategic Next-Step Roadmap",
-                  "Digital Document Verification",
-                  "Fixed Fee - No Hidden Charges"
-                ].map((feature, i) => (
-                  <div key={i} className="flex items-start gap-4 p-2">
-                    <div className="mt-1 bg-gold-100 text-gold-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] flex-shrink-0">
-                      <i className="fas fa-check"></i>
-                    </div>
-                    <span className="text-slate-600 text-[13px] font-medium">{feature}</span>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
-
-            {/* Right Card - Premium Template */}
-            <div className="reveal-up bg-oxford-900 rounded-[40px] shadow-2xl shadow-oxford-900/40 border border-oxford-800 p-10 flex flex-col hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-gold-500/10 rounded-bl-full -mr-20 -mt-20 pointer-events-none"></div>
-              
-              <div className="text-center mb-10 relative z-10">
-                <span className="px-4 py-1.5 bg-gold-500/20 text-gold-400 text-[10px] font-bold uppercase tracking-widest rounded-full mb-6 inline-block">Specialized Care</span>
-                <h3 className="text-2xl font-serif font-bold text-white mb-4">Counselling Session</h3>
-                <div className="flex items-baseline justify-center mb-8">
-                  <span className="text-5xl font-bold text-white">₹999</span>
-                  <span className="text-slate-400 ml-2 font-medium">/ session</span>
-                </div>
-                <Link href="/counselling" className="group relative w-full py-4 bg-gold-500 text-oxford-900 font-bold rounded-2xl text-center shadow-lg hover:shadow-gold-500/40 transition-all uppercase tracking-widest text-xs overflow-hidden block">
-                  <span className="relative z-10 group-hover:text-white transition-colors">Start Counselling</span>
-                  <div className="absolute inset-0 bg-oxford-800 transform translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
-                </Link>
-              </div>
-              
-              <div className="space-y-5 flex-1 relative z-10">
-                {[
-                  "Mental Health & Trauma Support",
-                  "Relationship & Family Guidance",
-                  "Confidential 1-on-1 Sessions",
-                  "Certified Empathetic Counsellors",
-                  "Flexible Digital Scheduling",
-                  "Anonymous Support Options"
-                ].map((feature, i) => (
-                  <div key={i} className="flex items-start gap-4 p-2">
-                    <div className="mt-1 bg-white/10 text-gold-500 rounded-full w-5 h-5 flex items-center justify-center text-[10px] flex-shrink-0">
-                      <i className="fas fa-check"></i>
-                    </div>
-                    <span className="text-slate-300 text-[13px] font-medium">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
           </div>
 
-          {/* Bottom Trust Strip */}
-          <div className="mt-20 py-10 border-t border-slate-100 text-center reveal-up">
-            <p className="text-slate-400 text-sm italic">
-              *All platform fees are non-refundable and cover the coordination and first-contact session costs.
-            </p>
-          </div>
+          {/* MENTAL HEALTH COUNSELLING PLAN */}
+          <div className="group w-full lg:w-[360px] rounded-xl p-6 pb-10 bg-gray-800 text-white">
+            <div className="flex flex-col items-center justify-center text-center">
+              <h3 className="text-lg font-semibold">Mental health councelling</h3>
+              <p className="text-gray-400">
+                platform fee to connect you with best mental health counsellor
+              </p>
 
+              <p className="mt-4 text-2xl font-semibold">
+                ₹999
+                <span className="text-sm font-normal text-gray-400">/session</span>
+              </p>
+
+              <button
+                onClick={() => router.push("/counseling")}
+                className="mt-4 w-full rounded-lg bg-gray-100 py-2.5 font-medium text-gray-800 transition hover:opacity-90"
+              >
+                Get Started
+              </button>
+            </div>
+
+            <div className="mt-2 flex flex-col">
+              {[
+                "1-on-1 private counselling session",
+                "Stress, anxiety & emotional support",
+                "Relationship & family counselling",
+                "Trauma recovery & confidence building",
+                "Flexible online appointment slots",
+                "100% confidential & secure support",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-2 border-b py-3 border-gray-700"
+                >
+                  <div className="rounded-full p-1 bg-white/10">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-check size-3 text-white"
+                      aria-hidden="true"
+                    >
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  </div>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 }
