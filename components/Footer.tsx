@@ -112,7 +112,7 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact Info</h4>
             <div className="space-y-3 text-gray-400">
-              <p>Chamber number-701, Saket District Court, New Delhi</p>
+              <p>Dronacharya group of institutions, B-27, Knowledge Park-III,incubation center,Greater Noida,Uttar Pradesh</p>
               <p>+91 85120 05097</p>
               <p>naiyebharat@gmail.com</p>
             </div>
