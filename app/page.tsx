@@ -316,6 +316,36 @@ export default function Home() {
 
         @media(max-width:768px){ .stat-item{padding:1rem 0.5rem;} }
         .stat-item p { word-wrap:break-word; hyphens:auto; }
+
+        /* MSME Sliding Text Animation */
+        .msme-slider-container {
+          --msme-height: 28px;
+          height: var(--msme-height);
+          overflow: hidden;
+          display: inline-block;
+          vertical-align: middle;
+        }
+        @media (max-width: 640px) {
+          .msme-slider-container {
+            --msme-height: 20px;
+          }
+        }
+        .msme-slider-text {
+          display: flex;
+          flex-direction: column;
+          animation: slide-msme 8s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+        }
+        .msme-slider-item {
+          height: var(--msme-height);
+          line-height: var(--msme-height);
+          text-align: left;
+        }
+        @keyframes slide-msme {
+          0%, 28% { transform: translateY(0); }
+          33%, 61% { transform: translateY(calc(-1 * var(--msme-height))); }
+          66%, 94% { transform: translateY(calc(-2 * var(--msme-height))); }
+          100% { transform: translateY(0); }
+        }
       `}</style>
 
       <div className="bg-gray-50">
@@ -372,6 +402,26 @@ export default function Home() {
               <h2 className="text-4xl font-bold text-gray-800 mb-4 gradient-text">About NaiyeBharat</h2>
               <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mb-8" />
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">Team with over two decades of experience, we stand as pillars of justice in the legal landscape of India.</p>
+              
+              {/* MSME Trust Badge */}
+              <div className="mt-8 flex items-center justify-center gap-2 sm:gap-3.5 w-fit mx-auto md:text-xl sm:text-lg text-sm">
+                {/* Compliant MSME / Udyam Icon */}
+                <div className="flex items-center gap-1.5 sm:gap-2 border-r border-slate-300 pr-2.5 sm:pr-3.5 mr-1 h-5 sm:h-7">
+                  <svg className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span className="font-extrabold tracking-wider text-slate-800">MSME</span>
+                </div>
+                
+                {/* Sliding Text Wrapper */}
+                <div className="msme-slider-container">
+                  <div className="msme-slider-text font-semibold text-slate-600">
+                    <span className="msme-slider-item">Certified under Ministry of MSME</span>
+                    <span className="msme-slider-item">Registered udyam enterprise</span>
+                    <span className="msme-slider-item">NaiyeBharat pvt.ltd</span>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
