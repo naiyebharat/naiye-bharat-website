@@ -37,10 +37,47 @@ const SOSRequestSchema = new Schema(
       enum: [
         "pending",
         "accepted",
+        "en_route",
+        "arrived",
         "completed",
         "cancelled",
       ],
       default: "pending",
+    },
+
+    amountPaid: {
+      type: Number,
+      default: 4500,
+    },
+
+    commission: {
+      type: Number,
+      default: 900,
+    },
+
+    payout: {
+      type: Number,
+      default: 3600,
+    },
+
+    paymentReleased: {
+      type: Boolean,
+      default: false,
+    },
+
+    emergencyType: {
+      type: String,
+      default: "General Emergency",
+    },
+
+    paymentId: {
+      type: String,
+      default: "",
+    },
+
+    eta: {
+      type: String,
+      default: "",
     },
   },
   {

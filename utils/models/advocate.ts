@@ -32,36 +32,40 @@ const AdvocateSchema = new Schema(
     },
     role: {
       type: String,
-      default: "advocate", // 🔥 By default 'advocate' role assign ho jayega authentication filter ke 
-      
+      default: "advocate",
     },
-    
     isOnline: {
-  type: Boolean,
-  default: false,
-},
-
-activeSOS: {
-  type: Boolean,
-  default: false,
-},
-
-socketId: {
-  type: String,
-  default: "",
-},
-
-currentLocation: {
-  type: {
-    type: String,
-    enum: ["Point"],
-    default: "Point",
-  },
-  coordinates: {
-    type: [Number],
-    default: undefined,
-  },
-},
+      type: Boolean,
+      default: false,
+    },
+    activeSOS: {
+      type: Boolean,
+      default: false,
+    },
+    isVerifiedSOS: {
+      type: Boolean,
+      default: false,
+    },
+    sosStatus: {
+      type: String,
+      enum: ["available", "busy", "offline"],
+      default: "offline",
+    },
+    socketId: {
+      type: String,
+      default: "",
+    },
+    currentLocation: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        default: undefined,
+      },
+    },
   },
   { timestamps: true },
 );

@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import GlobalSOS from './GlobalSOS';
 
 export default function AdminBypass({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -25,6 +26,7 @@ export default function AdminBypass({ children }: { children: React.ReactNode })
     <>
       <Navbar />
       {children}
+      <GlobalSOS />
       <Footer />
     </>
   );
