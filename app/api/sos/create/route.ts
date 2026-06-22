@@ -63,7 +63,32 @@ export async function POST(req: Request) {
       }).limit(5);
     }
 
+    // Fallback: If no verified available lawyers are found, fall back to any available lawyers to ensure request reaches someone
+    if (nearestLawyers.length === 0) {
+      console.log("No verified available lawyers found. Falling back to any available lawyers.");
+      try {
+        nearestLawyers = await Advocate.find({
+          sosStatus: "available",
+          currentLocation: {
+            $near: {
+              $geometry: {
+                type: "Point",
+                coordinates: [parseFloat(lng), parseFloat(lat)],
+              },
+            },
+          },
+        }).limit(5);
+      } catch (geoError) {
+        nearestLawyers = await Advocate.find({
+          sosStatus: "available",
+        }).limit(5);
+      }
+    }
+
     const targetLawyerIds = nearestLawyers.map((l) => l._id.toString());
+
+    sos.targetLawyers = targetLawyerIds;
+    await sos.save();
 
     // 3. Broadcast the SOS alert via Pusher
     // We send targetLawyerIds so only those lawyers process the notification

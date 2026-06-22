@@ -40,6 +40,14 @@ body {
   @apply selection:bg-gold-500/30 selection:text-oxford-900;
 }
 
+button,
+[role="button"],
+select,
+summary,
+a[href] {
+  cursor: pointer;
+}
+
 /* Glassmorphism Pro */
 .glass-panel {
   background: rgba(255, 255, 255, 0.75);

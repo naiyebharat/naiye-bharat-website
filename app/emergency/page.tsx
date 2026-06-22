@@ -291,7 +291,7 @@ export default function EmergencyPage() {
 
               if (createRes.data.success) {
                 setSosId(createRes.data.sosId);
-                // We keep stage as "searching". When lawyer accepts, state switches automatically.
+                window.location.href = `/client?sos=${createRes.data.sosId}`;
               } else {
                 alert("Failed to create SOS request");
                 setStage("select-type");

@@ -6,13 +6,18 @@ import { ShieldCheck, MessageSquare, Clock, Loader2 } from "lucide-react";
 
 export interface ClientRequest {
   id: string;
-  roomId: string;
+  roomId?: string;
   name: string;
   issue: string;
   lastMessage: string;
   lastMessageTime: string;
   status: "pending_expert" | "active_discussion" | "closed";
   isAssigned: boolean;
+  requestType?: "consultation" | "sos";
+  sosId?: string;
+  payout?: number;
+  lat?: number;
+  lng?: number;
 }
 
 interface RequestListProps {

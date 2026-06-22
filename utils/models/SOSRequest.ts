@@ -14,6 +14,13 @@ const SOSRequestSchema = new Schema(
       default: null,
     },
 
+    targetLawyers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Advocate",
+      },
+    ],
+
     issueType: {
       type: String,
       default: "Emergency Legal Assistance",
