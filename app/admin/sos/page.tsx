@@ -5,6 +5,8 @@ import Link from "next/link";
 import axios from "axios";
 import { pusherClient } from "@/utils/libs/pusherClient";
 import ThemeToggle from "../../advocate/components/ThemeToggle";
+import TelemetryFeedList from "../components/TelemetryFeedList";
+import LawyerVerificationRegister from "../components/LawyerVerificationRegister";
 
 export default function AdminSOSPage() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -20,8 +22,9 @@ export default function AdminSOSPage() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "verification">("dashboard");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  // Reassignment Modal State
+  // Reassignment & Verification Modal States
   const [reassignTarget, setReassignTarget] = useState<any | null>(null);
+  const [verifyTarget, setVerifyTarget] = useState<{ id: string; currentStatus: boolean; name: string } | null>(null);
 
   // Map variables
   const mapRef = useRef<any>(null);
@@ -297,15 +300,16 @@ export default function AdminSOSPage() {
   };
 
   // Toggle lawyer SOS verification
-  const handleToggleVerification = async (advocateId: string, currentStatus: boolean) => {
+  const handleToggleVerification = async () => {
+    if (!verifyTarget) return;
     try {
       const res = await axios.post("/api/admin/sos-actions", {
         action: "toggle-verification",
-        advocateId,
-        verify: !currentStatus,
+        advocateId: verifyTarget.id,
+        verify: !verifyTarget.currentStatus,
       });
       if (res.data.success) {
-        alert(`Verification status updated successfully for advocate.`);
+        setVerifyTarget(null);
         fetchData();
       }
     } catch (err) {
@@ -448,164 +452,24 @@ export default function AdminSOSPage() {
                   </div>
 
                   {/* Active SOS requests management ledger */}
-                  <div className="lg:col-span-5 bg-white dark:bg-[#0c142b] border border-slate-200 dark:border-slate-850 rounded-[30px] p-6 shadow-sm flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-sm uppercase tracking-wider text-slate-500">Telemetry Feed</h3>
-                        
-                        {/* Status filter selection dropdown */}
-                        <select
-                          value={filterStatus}
-                          onChange={(e) => setFilterStatus(e.target.value)}
-                          className="px-3 py-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-[10px] rounded-lg text-slate-400 uppercase font-bold outline-none"
-                        >
-                          <option value="all">All Incidents</option>
-                          <option value="active">Active Feed</option>
-                          <option value="pending">Pending Acceptance</option>
-                          <option value="accepted">Accepted / Dispatched</option>
-                          <option value="completed">Completed</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-4 max-h-[320px] overflow-y-auto scrollbar-premium pr-2">
-                        {filteredRequests.length === 0 ? (
-                          <div className="text-center py-10 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                            No telemetry nodes match search filters.
-                          </div>
-                        ) : (
-                          filteredRequests.map((sos) => (
-                            <div key={sos._id} className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-2xl flex flex-col gap-3 transition-colors">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200">{sos.client?.name || "Client"}</h4>
-                                  <div className="text-[10px] text-slate-400 font-medium mt-0.5">{sos.emergencyType}</div>
-                                </div>
-                                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${
-                                  sos.status === "pending"
-                                    ? "bg-red-950/20 border-red-500/30 text-red-500 animate-pulse"
-                                    : sos.status === "completed"
-                                    ? "bg-green-950/20 border-green-500/30 text-green-400"
-                                    : "bg-amber-950/20 border-amber-500/30 text-amber-500"
-                                }`}>
-                                  {sos.status}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1 pt-2 border-t border-slate-100 dark:border-slate-900">
-                                <div>
-                                  Lawyer: <span className="font-bold text-slate-200">{sos.lawyer?.name || "Unassigned"}</span>
-                                </div>
-                                <div>
-                                  ETA: <span className="font-mono text-amber-500">{sos.eta || "N/A"}</span>
-                                </div>
-                              </div>
-
-                              {/* Admin control panel options per card */}
-                              <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-900">
-                                {sos.status !== "completed" && sos.status !== "cancelled" && (
-                                  <button
-                                    onClick={() => openReassignModal(sos)}
-                                    className="px-3 py-1.5 bg-red-950/40 border border-red-500/20 hover:bg-red-900/40 text-red-400 hover:text-red-300 rounded-lg text-[9px] uppercase tracking-wider font-bold transition-all"
-                                  >
-                                    Reassign Counsel
-                                  </button>
-                                )}
-                                {sos.status === "completed" && !sos.paymentReleased && (
-                                  <button
-                                    onClick={() => handleReleasePayment(sos._id)}
-                                    className="px-3 py-1.5 bg-emerald-650 hover:bg-emerald-700 text-white rounded-lg text-[9px] uppercase tracking-wider font-bold shadow-md transition-all"
-                                  >
-                                    Release ₹3,600 Payout
-                                  </button>
-                                )}
-                                {sos.paymentReleased && (
-                                  <span className="text-[8px] text-green-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                                    <i className="fas fa-circle-check"></i> Payout Released
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
+                  <TelemetryFeedList
+                    filteredRequests={filteredRequests}
+                    filterStatus={filterStatus}
+                    setFilterStatus={setFilterStatus}
+                    adminProfile={adminProfile}
+                    openReassignModal={openReassignModal}
+                    handleReleasePayment={handleReleasePayment}
+                  />
                 </div>
-
               </div>
             ) : (
-              // LAWYER VERIFICATION TAB
-              <div className="bg-white dark:bg-[#0c142b] border border-slate-200 dark:border-slate-850 rounded-[30px] p-6 shadow-sm space-y-6">
-                <div>
-                  <h3 className="font-extrabold text-sm uppercase tracking-wider text-slate-500">Lawyer SOS Verification Register</h3>
-                  <p className="text-xs text-slate-400 mt-1">Approve or revoke verification keys for lawyers, qualifying them to access real-time dispatch feeds.</p>
-                </div>
-
-                <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-900 scrollbar-premium">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-100 dark:bg-slate-950 text-[9px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100 dark:border-slate-900">
-                        <th className="p-4">Advocate Name</th>
-                        <th className="p-4">Email / Phone</th>
-                        <th className="p-4">Specialty / Experience</th>
-                        <th className="p-4">SOS status</th>
-                        <th className="p-4 text-right">Emergency verification</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-xs">
-                      {lawyers.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="text-center py-8 text-slate-500 uppercase text-[10px] font-bold tracking-wider">
-                            No advocates registered in network.
-                          </td>
-                        </tr>
-                      ) : (
-                        lawyers.map((lawyer) => (
-                          <tr key={lawyer._id} className="hover:bg-slate-50 dark:hover:bg-slate-950/50 transition-colors">
-                            <td className="p-4 font-bold text-slate-800 dark:text-slate-200">{lawyer.name}</td>
-                            <td className="p-4 font-mono text-[10px] text-slate-400">
-                              <div>{lawyer.email}</div>
-                              <div className="mt-0.5">{lawyer.phoneNumber}</div>
-                            </td>
-                            <td className="p-4 text-slate-500">
-                              <div>{lawyer.specialty}</div>
-                              <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{lawyer.experience} yrs exp</div>
-                            </td>
-                            <td className="p-4">
-                              <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border ${
-                                lawyer.sosStatus === "available"
-                                  ? "bg-green-950/20 border-green-500/30 text-green-400"
-                                  : lawyer.sosStatus === "busy"
-                                  ? "bg-amber-950/20 border-amber-500/30 text-amber-500"
-                                  : "bg-slate-900 border-slate-800 text-slate-500"
-                              }`}>
-                                {lawyer.sosStatus || "offline"}
-                              </span>
-                            </td>
-                            <td className="p-4 text-right">
-                              <button
-                                onClick={() => handleToggleVerification(lawyer._id, lawyer.isVerifiedSOS)}
-                                className={`px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-bold transition-all border ${
-                                  lawyer.isVerifiedSOS
-                                    ? "bg-green-600 border-green-500 text-white shadow-md hover:bg-green-700"
-                                    : "bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-400 hover:text-white"
-                                }`}
-                              >
-                                {lawyer.isVerifiedSOS ? "Verified" : "Unverified"}
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <LawyerVerificationRegister
+                lawyers={lawyers}
+                setVerifyTarget={setVerifyTarget}
+              />
             )}
           </>
         )}
-
       </div>
 
       {/* --- REASSIGNMENT DIALOG MODAL --- */}
@@ -656,6 +520,33 @@ export default function AdminSOSPage() {
                 className="w-full py-2.5 bg-slate-150 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-900 text-slate-400 hover:text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all border border-slate-800"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* --- VERIFICATION CONFIRMATION MODAL --- */}
+      {verifyTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="max-w-sm w-full bg-white dark:bg-[#0c142b] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl text-center">
+            <h3 className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white mb-2">
+              {verifyTarget.currentStatus ? "Revoke Verification?" : "Approve Verification?"}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+              Are you sure you want to {verifyTarget.currentStatus ? "revoke" : "approve"} SOS verification for <b>{verifyTarget.name}</b>?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setVerifyTarget(null)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleToggleVerification}
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+              >
+                Confirm
               </button>
             </div>
           </div>
