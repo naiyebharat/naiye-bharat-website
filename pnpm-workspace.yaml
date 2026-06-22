@@ -1,6 +1,8 @@
 allowBuilds:
+  protobufjs: true
   sharp: true
   unrs-resolver: true
+  zego-express-engine-webrtc: true
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

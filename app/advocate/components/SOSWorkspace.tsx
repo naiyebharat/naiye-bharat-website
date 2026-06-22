@@ -41,12 +41,28 @@ export default function SOSWorkspace({
   const mapContainerId = "advocate-leaflet-map";
 
   useEffect(() => {
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      userMarkerRef.current = null;
+      lawyerMarkerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
     if (activeSOS && typeof window !== "undefined" && (window as any).L) {
       const L = (window as any).L;
       const container = document.getElementById(mapContainerId);
       if (!container) return;
 
       if (!mapRef.current) {
+        if ((container as any)._leaflet_id) {
+          (container as any)._leaflet_id = null;
+          container.innerHTML = "";
+        }
+
         mapRef.current = L.map(mapContainerId, {
           zoomControl: false,
           attributionControl: false,

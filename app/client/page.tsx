@@ -122,12 +122,29 @@ export default function ClientPortal() {
     return () => clearInterval(sosInterval);
   }, []);
 
+  // Load chat history from DB whenever active SOS changes
   useEffect(() => {
     if (!activeSosId) {
       setSosMessages([]);
       return;
     }
 
+    // Fetch persisted messages from DB
+    async function loadChatHistory() {
+      try {
+        const res = await fetch(`/api/sos/chat?sosId=${activeSosId}`);
+        const data = await res.json();
+        if (data.success && data.messages) {
+          setSosMessages(data.messages);
+        }
+      } catch (err) {
+        console.error("SOS chat history fetch error:", err);
+      }
+    }
+
+    loadChatHistory();
+
+    // Subscribe for real-time new messages
     const channel = pusherClient.subscribe(`sos-${activeSosId}`);
 
     channel.bind("status-update", (data: any) => {
@@ -146,16 +163,20 @@ export default function ClientPortal() {
     });
 
     channel.bind("chat-message", (msg: any) => {
-      setSosMessages((prev) => [
-        ...prev,
-        {
-          id: `${Date.now()}-${prev.length}`,
-          senderType: msg.senderType,
-          senderName: msg.senderName,
-          text: msg.text,
-          createdAt: msg.createdAt || new Date().toISOString(),
-        },
-      ]);
+      // Avoid duplicates: check by id if present
+      setSosMessages((prev) => {
+        if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+        return [
+          ...prev,
+          {
+            id: msg.id || `rt-${Date.now()}-${prev.length}`,
+            senderType: msg.senderType,
+            senderName: msg.senderName,
+            text: msg.text,
+            createdAt: msg.createdAt || new Date().toISOString(),
+          },
+        ];
+      });
     });
 
     return () => {
