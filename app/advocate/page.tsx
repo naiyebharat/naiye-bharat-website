@@ -59,11 +59,12 @@ export default function AdvocateDashboardPage() {
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<"consultation" | "sos">("consultation");
 
-  // Map refs
-  const mapRef = useRef<any>(null);
-  const userMarkerRef = useRef<any>(null);
-  const lawyerMarkerRef = useRef<any>(null);
-  const mapContainerId = "advocate-leaflet-map";
+  // SOS History (completed/cancelled)
+  const [sosHistory, setSosHistory] = useState<any[]>([]);
+  const [sosHistoryLoading, setSosHistoryLoading] = useState(false);
+  const [selectedHistorySOS, setSelectedHistorySOS] = useState<any | null>(null);
+  const [sidebarTab, setSidebarTab] = useState<"consultation" | "sos" | "history">("consultation");
+
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll chat to latest message
@@ -123,6 +124,7 @@ export default function AdvocateDashboardPage() {
           // Check if lawyer has an active SOS from DB
           checkActiveSOS();
           fetchRequestPipeline();
+          fetchSOSHistory();
         }
       } catch (err) {
         console.error("Profile Fetch Error:", err);
@@ -138,18 +140,40 @@ export default function AdvocateDashboardPage() {
     return () => clearInterval(interval);
   }, [advocateProfile, fetchRequestPipeline]);
 
-  // Check active SOS from DB
+  // Check active SOS from DB and load its chat history
   const checkActiveSOS = async () => {
     try {
       const res = await axios.get("/api/advocate/active-sos");
       if (res.data.success && res.data.activeSOS) {
         setActiveSOS(res.data.activeSOS);
         setSosStatus("busy");
-        // Load messages for this active SOS
-        // In this implementation, chat messages are real-time, starting empty
+        // Load persisted chat messages from DB
+        try {
+          const chatRes = await axios.get(`/api/sos/chat?sosId=${res.data.activeSOS._id}`);
+          if (chatRes.data.success && chatRes.data.messages) {
+            setMessages(chatRes.data.messages);
+          }
+        } catch (chatErr) {
+          console.error("Failed to load SOS chat history:", chatErr);
+        }
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // Fetch completed SOS history for this advocate
+  const fetchSOSHistory = async () => {
+    setSosHistoryLoading(true);
+    try {
+      const res = await axios.get("/api/advocate/sos-history");
+      if (res.data.success) {
+        setSosHistory(res.data.history || []);
+      }
+    } catch (err) {
+      console.error("SOS history fetch error:", err);
+    } finally {
+      setSosHistoryLoading(false);
     }
   };
 
@@ -284,87 +308,31 @@ export default function AdvocateDashboardPage() {
       if (data.status) {
         setActiveSOS((prev) => prev ? { ...prev, status: data.status } : null);
         if (data.status === "completed" || data.status === "cancelled") {
-          setActiveSOS(null);
-          setSosStatus("available");
+          // Brief delay so advocate sees the final status before workspace closes
+          setTimeout(() => {
+            setActiveSOS(null);
+            setMessages([]);
+            setSosStatus("available");
+            // Refresh history so the completed SOS appears
+            fetchSOSHistory();
+          }, 2000);
         }
       }
     });
 
     sosChannel.bind("chat-message", (msg: any) => {
-      setMessages((prev) => [...prev, msg]);
+      setMessages((prev) => {
+        // Deduplicate by id if present
+        if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
     });
 
     return () => {
       pusherClient.unsubscribe(`sos-${activeSOS._id}`);
     };
-  }, [activeSOS]);
+  }, [activeSOS?._id]);
 
-  // Initialize and update Leaflet Map in Active SOS Screen
-  useEffect(() => {
-    if (activeSOS && typeof window !== "undefined" && (window as any).L) {
-      const L = (window as any).L;
-
-      const container = document.getElementById(mapContainerId);
-      if (!container) return;
-
-      if (!mapRef.current) {
-        mapRef.current = L.map(mapContainerId, {
-          zoomControl: false,
-          attributionControl: false,
-        }).setView([currentCoords.lat, currentCoords.lng], 15);
-
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-          maxZoom: 20,
-        }).addTo(mapRef.current);
-      }
-
-      const map = mapRef.current;
-      const clientLat = activeSOS.clientLocation.coordinates[1];
-      const clientLng = activeSOS.clientLocation.coordinates[0];
-
-      // Update Lawyer marker
-      if (lawyerMarkerRef.current) {
-        lawyerMarkerRef.current.setLatLng([currentCoords.lat, currentCoords.lng]);
-      } else {
-        const lawyerIcon = L.divIcon({
-          className: "lawyer-marker-gold-large",
-          html: `
-            <div class="flex items-center justify-center w-9 h-9 bg-amber-500 border-2 border-white rounded-full shadow-2xl text-white">
-              <i class="fas fa-scale-balanced text-sm"></i>
-            </div>
-          `,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
-        });
-        lawyerMarkerRef.current = L.marker([currentCoords.lat, currentCoords.lng], { icon: lawyerIcon }).addTo(map);
-      }
-
-      // Update Client marker
-      if (userMarkerRef.current) {
-        userMarkerRef.current.setLatLng([clientLat, clientLng]);
-      } else {
-        const userIcon = L.divIcon({
-          className: "client-marker-pulse-large",
-          html: `
-            <div class="relative flex items-center justify-center">
-              <span class="animate-ping absolute inline-flex h-6 w-6 rounded-full bg-red-400 opacity-75"></span>
-              <div class="relative rounded-full h-4.5 w-4.5 bg-red-600 border-2 border-white shadow-md"></div>
-            </div>
-          `,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
-        });
-        userMarkerRef.current = L.marker([clientLat, clientLng], { icon: userIcon }).addTo(map);
-      }
-
-      // Fit bounds to show both client and lawyer
-      const bounds = L.latLngBounds(
-        [currentCoords.lat, currentCoords.lng],
-        [clientLat, clientLng]
-      );
-      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
-    }
-  }, [activeSOS, currentCoords]);
 
   // Call timer effect
   useEffect(() => {
@@ -455,6 +423,14 @@ export default function AdvocateDashboardPage() {
       if (res.data.success) {
         setActiveSOS((prev) => prev ? { ...prev, status } : null);
         triggerToast("Status Updated", `Emergency status updated to: ${status.replace("_", " ")}`, "success");
+        if (status === "completed" || status === "cancelled") {
+          setTimeout(() => {
+            setActiveSOS(null);
+            setMessages([]);
+            setSosStatus("available");
+            fetchSOSHistory();
+          }, 2000);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -682,75 +658,225 @@ export default function AdvocateDashboardPage() {
           {/* Regular Client list & chat split */}
           <div className="flex-1 flex overflow-hidden w-full relative">
             {/* Left sidebar - Room lists */}
-            <div className={`w-full md:w-85 lg:w-96 h-full flex-shrink-0 bg-white dark:bg-[#070d1e] border-r border-slate-200 dark:border-slate-900 ${isConsultationChatOpen ? "hidden md:flex" : "flex"} flex-col`}>
-              <div className="p-3 border-b border-slate-200 dark:border-slate-800/65 flex gap-2 bg-slate-50 dark:bg-[#050b1d]">
+            <div className={`w-full md:w-85 lg:w-96 h-full flex-shrink-0 bg-white dark:bg-[#070d1e] border-r border-slate-200 dark:border-slate-900 ${isConsultationChatOpen || selectedHistorySOS ? "hidden md:flex" : "flex"} flex-col`}>
+              {/* 3-Tab Strip */}
+              <div className="p-3 border-b border-slate-200 dark:border-slate-800/65 flex gap-1.5 bg-slate-50 dark:bg-[#050b1d]">
                 <button
                   type="button"
-                  onClick={() => {
-                    setActiveTab("consultation");
-                    setActiveClient(null);
-                  }}
+                  onClick={() => { setSidebarTab("consultation"); setActiveTab("consultation"); setActiveClient(null); setSelectedHistorySOS(null); }}
                   className={`flex-1 py-2 text-center rounded-xl text-[10px] font-black uppercase tracking-wider transition border ${
-                    activeTab === "consultation"
+                    sidebarTab === "consultation"
                       ? "bg-amber-500 text-slate-950 border-amber-500 shadow-md"
                       : "bg-white dark:bg-[#0b1329] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-850 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  Consultations
+                  Consults
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setActiveTab("sos");
-                    setActiveClient(null);
-                  }}
-                  className={`flex-1 py-2 text-center rounded-xl text-[10px] font-black uppercase tracking-wider transition border flex items-center justify-center gap-1.5 ${
-                    activeTab === "sos"
-                      ? "bg-red-650 text-white border-red-650 shadow-md"
+                  onClick={() => { setSidebarTab("sos"); setActiveTab("sos"); setActiveClient(null); setSelectedHistorySOS(null); }}
+                  className={`flex-1 py-2 text-center rounded-xl text-[10px] font-black uppercase tracking-wider transition border flex items-center justify-center gap-1 ${
+                    sidebarTab === "sos"
+                      ? "bg-red-600 text-white border-red-600 shadow-md"
                       : "bg-white dark:bg-[#0b1329] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-850 hover:text-red-500 dark:hover:text-red-400"
                   }`}
                 >
-                  SOS Alerts
+                  SOS
                   {requests.some((r) => r.requestType === "sos") && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setSidebarTab("history"); setActiveClient(null); setIsConsultationChatOpen(false); }}
+                  className={`flex-1 py-2 text-center rounded-xl text-[10px] font-black uppercase tracking-wider transition border ${
+                    sidebarTab === "history"
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-md"
+                      : "bg-white dark:bg-[#0b1329] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-850 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  }`}
+                >
+                  History
+                  {sosHistory.length > 0 && (
+                    <span className="ml-1 text-[8px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-black">{sosHistory.length}</span>
                   )}
                 </button>
               </div>
-              <RequestList
-                requests={requests.filter((r) => r.requestType === activeTab)}
-                activeId={activeClient?.id || null}
-                onSelect={(c) => {
-                  if (c.requestType === "sos") {
-                    const dist = c.lat && c.lng
-                      ? calculateDistance(currentCoords.lat, currentCoords.lng, c.lat, c.lng).toFixed(1)
-                      : "N/A";
-                    setIncomingSOS({
-                      sosId: c.sosId || c.id,
-                      emergencyType: c.issue,
-                      clientLocation: { lat: c.lat, lng: c.lng },
-                      distance: dist,
-                      payout: c.payout || 3600,
-                    });
-                    return;
-                  }
-                  setActiveClient(c);
-                  setIsConsultationChatOpen(true);
-                }}
-                loading={roomsLoading}
-              />
+
+              {/* SOS History List */}
+              {sidebarTab === "history" ? (
+                <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-premium">
+                  {sosHistoryLoading ? (
+                    <div className="flex items-center justify-center py-10">
+                      <div className="w-6 h-6 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                    </div>
+                  ) : sosHistory.length === 0 ? (
+                    <div className="text-center py-10">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center mx-auto mb-3">
+                        <i className="fas fa-clock-rotate-left text-slate-400 text-lg" />
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">No completed SOS yet</p>
+                    </div>
+                  ) : (
+                    sosHistory.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSelectedHistorySOS(item)}
+                        className={`w-full text-left p-3.5 rounded-xl border transition-all ${
+                          selectedHistorySOS?.id === item.id
+                            ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500"
+                            : "bg-white dark:bg-[#0b1329]/60 border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-800"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-xs ${
+                            item.status === "completed" ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                          }`}>
+                            <i className={`fas ${item.status === "completed" ? "fa-check-double" : "fa-ban"}`} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-black text-slate-800 dark:text-white truncate">{item.emergencyType}</p>
+                            <p className="text-[10px] font-semibold text-slate-500 mt-0.5 truncate">{item.client?.name || "Client"}</p>
+                            <div className="flex items-center justify-between mt-1.5">
+                              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                item.status === "completed"
+                                  ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                                  : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                              }`}>{item.status}</span>
+                              <span className="text-[9px] font-bold text-slate-400">Rs {item.payout}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {item.messages?.length > 0 && (
+                          <p className="mt-2 text-[9px] text-slate-500 dark:text-slate-600 truncate border-t border-slate-100 dark:border-slate-800 pt-1.5">
+                            <i className="fas fa-comment-dots mr-1 text-slate-400" />
+                            {item.messages.length} message{item.messages.length !== 1 ? "s" : ""} in transcript
+                          </p>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              ) : (
+                <RequestList
+                  requests={requests.filter((r) => r.requestType === (sidebarTab === "sos" ? "sos" : "consultation"))}
+                  activeId={activeClient?.id || null}
+                  onSelect={(c) => {
+                    if (c.requestType === "sos") {
+                      const dist = c.lat && c.lng
+                        ? calculateDistance(currentCoords.lat, currentCoords.lng, c.lat, c.lng).toFixed(1)
+                        : "N/A";
+                      setIncomingSOS({
+                        sosId: c.sosId || c.id,
+                        emergencyType: c.issue,
+                        clientLocation: { lat: c.lat, lng: c.lng },
+                        distance: dist,
+                        payout: c.payout || 3600,
+                      });
+                      return;
+                    }
+                    setActiveClient(c);
+                    setIsConsultationChatOpen(true);
+                  }}
+                  loading={roomsLoading}
+                />
+              )}
             </div>
 
-            {/* Right sidebar - Consultation Chat details */}
-            <div className={`flex-1 h-full bg-slate-50 dark:bg-[#050b1d] ${isConsultationChatOpen ? "flex" : "hidden md:flex"}`}>
-              <ChatArea
-                activeClient={activeClient}
-                onCloseChat={() => {
-                  setActiveClient(null);
-                  setIsConsultationChatOpen(false);
-                }}
-                triggerToast={triggerToast}
-              />
-            </div>
+            {/* Right panel */}
+            {sidebarTab === "history" && selectedHistorySOS ? (
+              <div className="flex-1 h-full flex flex-col bg-slate-50 dark:bg-[#050b1d] overflow-hidden">
+                {/* History detail header */}
+                <div className="h-16 px-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1329] flex items-center justify-between flex-shrink-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-600/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 flex-shrink-0">
+                      <i className="fas fa-check-double text-sm" />
+                    </div>
+                    <div className="truncate">
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider truncate">{selectedHistorySOS.emergencyType}</h4>
+                      <p className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">{selectedHistorySOS.client?.name} · {selectedHistorySOS.status}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedHistorySOS(null)}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 transition"
+                  >
+                    <i className="fas fa-xmark" />
+                  </button>
+                </div>
+
+                {/* Summary cards */}
+                <div className="grid grid-cols-3 gap-3 p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-100/60 dark:bg-slate-950/40 flex-shrink-0">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1329] p-3">
+                    <div className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Client</div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white truncate">{selectedHistorySOS.client?.name || "—"}</div>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1329] p-3">
+                    <div className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Payout</div>
+                    <div className="text-xs font-black text-emerald-600 dark:text-emerald-400">Rs {selectedHistorySOS.payout}</div>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1329] p-3">
+                    <div className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Date</div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white">
+                      {selectedHistorySOS.updatedAt ? new Date(selectedHistorySOS.updatedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chat transcript */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-3 scrollbar-premium">
+                  <div className="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-3 flex items-center gap-2">
+                    <i className="fas fa-scroll" /> Incident Chat Transcript
+                  </div>
+
+                  {!selectedHistorySOS.messages || selectedHistorySOS.messages.length === 0 ? (
+                    <div className="text-center py-8 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <i className="fas fa-comment-slash text-2xl mb-2 block" />
+                      No messages in this incident
+                    </div>
+                  ) : (
+                    selectedHistorySOS.messages.map((msg: any, idx: number) => {
+                      const isExpert = msg.senderType === "expert";
+                      const isSystem = msg.senderType === "system";
+                      if (isSystem) {
+                        return (
+                          <div key={msg.id || idx} className="flex justify-center">
+                            <span className="bg-slate-200 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full">
+                              {msg.text}
+                            </span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={msg.id || idx} className={`flex flex-col max-w-[75%] ${isExpert ? "ml-auto items-end" : "mr-auto items-start"}`}>
+                          <div className={`p-3 rounded-2xl text-xs leading-relaxed ${
+                            isExpert
+                              ? "bg-amber-500 text-slate-950 font-medium rounded-tr-none"
+                              : "bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none"
+                          }`}>
+                            {msg.text}
+                          </div>
+                          <span className="text-[7px] text-slate-400 font-bold uppercase mt-1 tracking-wider">
+                            {msg.senderName} · {new Date(msg.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className={`flex-1 h-full bg-slate-50 dark:bg-[#050b1d] ${isConsultationChatOpen ? "flex" : "hidden md:flex"}`}>
+                <ChatArea
+                  activeClient={activeClient}
+                  onCloseChat={() => {
+                    setActiveClient(null);
+                    setIsConsultationChatOpen(false);
+                  }}
+                  triggerToast={triggerToast}
+                />
+              </div>
+            )}
           </div>
 
         </div>
