@@ -376,9 +376,9 @@ export default function Home() {
               <a href="/counselling" className="border-2 border-white text-white px-8 py-3 rounded-md font-semibold hover:bg-white hover:text-blue-700 transition-all transform hover:scale-105 interactive-bg">Mental health counselling</a>
             </div>
           </div>
-          <div className="sos-banner" onClick={() => (window.location.href="/emergency")}>
+          {/* <div className="sos-banner" onClick={() => (window.location.href="/emergency")}>
             <span className="sos-title">SOS</span>
-          </div>
+          </div> */}
         </section>
 
         {/* ── STATS / COUNTERS ── */}
