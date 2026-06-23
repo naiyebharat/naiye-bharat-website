@@ -11,6 +11,7 @@ import LogoutModal from "../advocate/components/LogoutModal";
 import { AnimatePresence } from "framer-motion";
 import { Briefcase, Siren } from "lucide-react";
 import { pusherClient } from "@/utils/libs/pusherClient";
+import { getSpecialistName } from "./utils";
 
 export default function ClientPortal() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -148,6 +149,15 @@ export default function ClientPortal() {
     const channel = pusherClient.subscribe(`sos-${activeSosId}`);
 
     channel.bind("status-update", (data: any) => {
+      let sanitizedLawyer = undefined;
+      if (data.lawyer) {
+        sanitizedLawyer = {
+          ...data.lawyer,
+          name: getSpecialistName(data.lawyer.id),
+          phoneNumber: undefined,
+          avatar: "",
+        };
+      }
       setSosRequests((prev) =>
         prev.map((item) =>
           item.id === activeSosId
@@ -155,7 +165,7 @@ export default function ClientPortal() {
                 ...item,
                 status: data.status || item.status,
                 eta: data.eta || item.eta,
-                lawyer: data.lawyer || item.lawyer,
+                lawyer: data.lawyer ? sanitizedLawyer : item.lawyer,
               }
             : item
         )

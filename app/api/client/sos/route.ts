@@ -4,6 +4,16 @@ import SOSRequest from "@/utils/models/SOSRequest";
 import Advocate from "@/utils/models/advocate";
 import { withAuth } from "@/utils/withAuth";
 
+function getSpecialistName(id: string) {
+  if (!id) return "Naiye Bharat Specialist";
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash % 10) + 1;
+  return `Naiye Bharat Specialist ${index}`;
+}
+
 export async function GET(req: NextRequest) {
   const auth = await withAuth(req, "client");
   if ("error" in auth) return auth.error;
@@ -30,11 +40,11 @@ export async function GET(req: NextRequest) {
         if (advocate) {
           lawyer = {
             id: advocate._id.toString(),
-            name: advocate.name,
-            phoneNumber: advocate.phoneNumber,
+            name: getSpecialistName(advocate._id.toString()),
+            phoneNumber: undefined, // Hide phone number from client
             specialty: advocate.specialty,
             experience: advocate.experience,
-            avatar: advocate.avatar || "",
+            avatar: "", // Hide avatar
             currentLocation: advocate.currentLocation || null,
           };
         }

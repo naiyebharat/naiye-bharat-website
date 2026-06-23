@@ -6,6 +6,16 @@ import Message from "@/utils/models/Message";
 import "@/utils/models/advocate";
 import { withAuth } from "@/utils/withAuth";
 
+function getSpecialistName(id: string) {
+  if (!id) return "Naiye Bharat Specialist";
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash % 10) + 1;
+  return `Naiye Bharat Specialist ${index}`;
+}
+
 export async function GET(req: NextRequest) {
   // ── Auth guard — only verified clients can access their own cases ──
   const auth = await withAuth(req, "client");
@@ -52,7 +62,9 @@ export async function GET(req: NextRequest) {
 
       formattedCases.push({
         id: targetRoomId,
-        advocateName: order.expertId?.name ? `Adv. ${order.expertId.name}` : "Unassigned Node",
+        advocateName: order.expertId?._id 
+          ? getSpecialistName(order.expertId._id.toString()) 
+          : "Unassigned Node",
         specialty: order.specialty || "Legal Consultation",
         lastMessageSnippet: snippet,
         status: mappedStatus,

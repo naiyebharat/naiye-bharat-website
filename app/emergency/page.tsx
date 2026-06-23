@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { pusherClient } from "@/utils/libs/pusherClient";
+import { getSpecialistName } from "../client/utils";
 
 // Emergency types options
 const EMERGENCY_TYPES = [
@@ -113,7 +114,13 @@ export default function EmergencyPage() {
         }
       }
       if (data.lawyer) {
-        setAssignedLawyer(data.lawyer);
+        const sanitized = {
+          ...data.lawyer,
+          name: getSpecialistName(data.lawyer.id),
+          phoneNumber: undefined,
+          avatar: "",
+        };
+        setAssignedLawyer(sanitized);
         if (data.lawyer.currentLocation?.coordinates) {
           setLawyerCoords({
             lat: data.lawyer.currentLocation.coordinates[1],
@@ -567,8 +574,8 @@ export default function EmergencyPage() {
                     setSosStatus("accepted");
                     setAssignedLawyer({
                       id: "mock_lawyer_id",
-                      name: "Adv. Raghav Sharma",
-                      phoneNumber: "+91 98765 43210",
+                      name: getSpecialistName("mock_lawyer_id"),
+                      phoneNumber: undefined,
                       experience: 12,
                       specialty: "Criminal Litigation",
                       avatar: "",
@@ -734,8 +741,8 @@ export default function EmergencyPage() {
                             {msg.text}
                           </div>
                           <span className="text-[7px] text-slate-500 font-bold uppercase mt-1 tracking-wider">
-                            {msg.senderName} • {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
+                             {msg.senderType === "client" ? msg.senderName : (assignedLawyer ? getSpecialistName(assignedLawyer.id) : "Naiye Bharat Specialist")} • {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                           </span>
                         </div>
                       ))
                     )}

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, Clock, MapPin, MessageSquare, Phone, Send, Shield, X, Zap } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, MapPin, MessageSquare, Send, Shield, X, Zap } from "lucide-react";
 import ZegoCallWidget from "@/components/ZegoCallWidget";
+import { getSpecialistName } from "../utils";
 
 export interface ClientSOSRequest {
   id: string;
@@ -137,7 +138,7 @@ export default function SOSPanel({ requests, activeSosId, messages, loading, use
                         </span>
                       </div>
                       <p className="text-[10px] font-bold text-slate-500 mt-1 truncate">
-                        {item.lawyer ? `Adv. ${item.lawyer.name}` : "Waiting for advocate acceptance"}
+                        {item.lawyer ? getSpecialistName(item.lawyer.id) : "Waiting for advocate acceptance"}
                       </p>
                       <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-slate-500">
                         <span className="flex items-center gap-1">
@@ -184,7 +185,7 @@ export default function SOSPanel({ requests, activeSosId, messages, loading, use
                 <ZegoCallWidget
                   sosId={activeSOS.id}
                   user={user}
-                  peerLabel={`Adv. ${activeSOS.lawyer.name}`}
+                  peerLabel={getSpecialistName(activeSOS.lawyer.id)}
                   compact
                 />
               )}
@@ -202,10 +203,10 @@ export default function SOSPanel({ requests, activeSosId, messages, loading, use
               <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</div>
               <div className="mt-1 text-sm font-black text-slate-900 dark:text-white">{statusLabel[activeSOS.status]}</div>
             </div>
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1329] p-4">
+             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1329] p-4">
               <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">Advocate</div>
               <div className="mt-1 text-sm font-black text-slate-900 dark:text-white truncate">
-                {activeSOS.lawyer ? `Adv. ${activeSOS.lawyer.name}` : "Not assigned yet"}
+                {activeSOS.lawyer ? getSpecialistName(activeSOS.lawyer.id) : "Not assigned yet"}
               </div>
             </div>
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1329] p-4">
@@ -217,7 +218,6 @@ export default function SOSPanel({ requests, activeSosId, messages, loading, use
           {activeSOS.lawyer && (
             <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1329] flex flex-wrap items-center gap-3 text-xs font-bold text-slate-600 dark:text-slate-300">
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> {activeSOS.lawyer.specialty || "Verified Advocate"}</span>
-              <span className="inline-flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-red-500" /> {activeSOS.lawyer.phoneNumber || "No phone"}</span>
               <span className="inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-amber-500" /> Live tracking active</span>
             </div>
           )}
@@ -249,7 +249,7 @@ export default function SOSPanel({ requests, activeSosId, messages, loading, use
                         : "bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none"
                     }`}>
                       <span className="block text-[8px] font-extrabold uppercase tracking-wider mb-1 opacity-60">
-                        {isClient ? "Client" : msg.senderName || "Advocate"}
+                        {isClient ? "Client" : (activeSOS.lawyer ? getSpecialistName(activeSOS.lawyer.id) : "Naiye Bharat Specialist")}
                       </span>
                       <p className="text-xs font-medium leading-relaxed break-words whitespace-pre-wrap">{msg.text}</p>
                       <div className="mt-1.5 text-[9px] font-semibold opacity-70 text-right">

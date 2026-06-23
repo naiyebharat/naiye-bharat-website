@@ -3,6 +3,21 @@
 import mongoose, { Schema, model, models } from "mongoose";
 import bcrypt from "bcryptjs";
 
+const PointSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true,
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
 const AdvocateSchema = new Schema(
   {
     name: { type: String, required: true },
@@ -56,15 +71,8 @@ const AdvocateSchema = new Schema(
       default: "",
     },
     currentLocation: {
-      type: {
-        type: String,
-        enum: ["Point"],
-        default: "Point",
-      },
-      coordinates: {
-        type: [Number],
-        default: undefined,
-      },
+      type: PointSchema,
+      default: undefined,
     },
   },
   { timestamps: true },

@@ -110,7 +110,7 @@ export default function ChatArea({ activeCase, messages, onSendMessage, onCloseC
                 <span className={`block text-[8px] font-extrabold uppercase tracking-wider mb-1 opacity-60 ${
                   isMe ? "text-right" : "text-left"
                 }`}>
-                  {isMe ? "Client" : "Advocate Node"}
+                  {isMe ? "Client" : "Naiye Bharat Specialist"}
                 </span>
 
                 <p className="text-xs font-medium leading-relaxed break-words whitespace-pre-wrap">
