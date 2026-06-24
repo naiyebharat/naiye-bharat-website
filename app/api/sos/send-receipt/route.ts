@@ -22,17 +22,24 @@ export async function POST(req: Request) {
       );
     }
 
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+    const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+    const smtpPort = parseInt(process.env.SMTP_PORT || "465");
+
     // If email creds are missing, skip silently
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn("[SOS Receipt] EMAIL_USER or EMAIL_PASS not configured. Skipping email.");
+    if (!smtpUser || !smtpPass) {
+      console.warn("[SOS Receipt] SMTP_USER or SMTP_PASS not configured. Skipping email.");
       return NextResponse.json({ success: true, message: "Email bypassed (credentials missing)" });
     }
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
 
@@ -266,7 +273,7 @@ export async function POST(req: Request) {
 </html>`;
 
     await transporter.sendMail({
-      from: `"NaiyeBharat Emergency Legal" <${process.env.EMAIL_USER}>`,
+      from: `"NaiyeBharat Emergency Legal" <${smtpUser}>`,
       to: clientEmail,
       subject: `🚨 SOS Payment Confirmed – NaiyeBharat Emergency #${sosId.slice(-8).toUpperCase()}`,
       html,
