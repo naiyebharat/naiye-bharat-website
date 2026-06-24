@@ -96,6 +96,20 @@ export default function CaseDetailsDrawer({ selectedCase, onClose }: CaseDetails
                 <span className="font-bold text-slate-600 dark:text-slate-400">Core Specialty:</span>
                 <span className="font-black text-indigo-600 dark:text-indigo-400 ml-auto uppercase text-[10px]">{selectedCase.specialty}</span>
               </div>
+              {selectedCase.selectedDate && (
+                <div className="flex items-center gap-3 text-xs">
+                  <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                  <span className="font-bold text-slate-600 dark:text-slate-400">Scheduled Date:</span>
+                  <span className="font-extrabold text-slate-900 dark:text-white ml-auto">{selectedCase.selectedDate}</span>
+                </div>
+              )}
+              {selectedCase.selectedTimeSlot && (
+                <div className="flex items-center gap-3 text-xs">
+                  <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                  <span className="font-bold text-slate-600 dark:text-slate-400">Time Slot:</span>
+                  <span className="font-extrabold text-slate-900 dark:text-white ml-auto">{selectedCase.selectedTimeSlot}</span>
+                </div>
+              )}
             </div>
 
             {/* Payment Data */}

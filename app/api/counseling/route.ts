@@ -16,6 +16,8 @@ export async function POST(req: NextRequest) {
       specialty,
       language,
       issueDescription,
+      selectedDate,
+      selectedTimeSlot,
     } = body;
 
     if (
@@ -25,7 +27,9 @@ export async function POST(req: NextRequest) {
       !phoneNumber ||
       !specialty ||
       !language ||
-      !issueDescription
+      !issueDescription ||
+      !selectedDate ||
+      !selectedTimeSlot
     ) {
       return NextResponse.json(
         { success: false, error: "Missing required onboarding telemetry fields." },
@@ -61,6 +65,8 @@ export async function POST(req: NextRequest) {
       specialty,
       language,
       issueDescription,
+      selectedDate,
+      selectedTimeSlot,
       expertId: null,
       sessionCost: 0,
       paymentStatus: "pending",

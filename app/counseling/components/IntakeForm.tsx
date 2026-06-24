@@ -19,6 +19,8 @@ const ClientIntakeSchema = Yup.object({
   specialty: Yup.string().required("Please select a core domain specialty"),
   language: Yup.string().required("Please select your comfortable language"),
   issueDescription: Yup.string().min(10, "Please describe your concern in at least 10 characters").required("Description layer requires context metrics"),
+  selectedDate: Yup.string().required("Consultation date is required"),
+  selectedTimeSlot: Yup.string().required("Time slot is required"),
 });
 
 const LOCAL_STORAGE_KEY = "counseling_intake_form_state";
@@ -48,6 +50,8 @@ export default function IntakeForm({ onSuccess }: { onSuccess: (orderId: string 
     specialty: "Mental Health / Therapy",
     language: "English",
     issueDescription: "",
+    selectedDate: "",
+    selectedTimeSlot: "",
   });
 
   const [currentUser, setCurrentUser] = useState<{ email: string; name: string } | null>(null);
@@ -266,6 +270,45 @@ export default function IntakeForm({ onSuccess }: { onSuccess: (orderId: string 
                   <option value="Punjabi">Punjabi</option>
                   <option value="Malayalam">Malayalam</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Row 3.5: Date + Time Slot Selection */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Select Consultation Date</label>
+                <input
+                  type="date"
+                  {...formik.getFieldProps("selectedDate")}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full bg-slate-50 dark:bg-[#050b1d] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500 dark:focus:border-[#00c2a8] transition-all font-bold"
+                />
+                {formik.touched.selectedDate && formik.errors.selectedDate && (
+                  <div className="text-rose-500 text-xs font-semibold flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" /> {formik.errors.selectedDate}</div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Select Time Slot (1 Hour)</label>
+                <select
+                  {...formik.getFieldProps("selectedTimeSlot")}
+                  className="w-full bg-slate-50 dark:bg-[#050b1d] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500 dark:focus:border-[#00c2a8] transition-all font-bold"
+                >
+                  <option value="">Choose a slot</option>
+                  <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
+                  <option value="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</option>
+                  <option value="11:00 AM - 12:00 PM">11:00 AM - 12:00 PM</option>
+                  <option value="12:00 PM - 01:00 PM">12:00 PM - 01:00 PM</option>
+                  <option value="01:00 PM - 02:00 PM">01:00 PM - 02:00 PM</option>
+                  <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
+                  <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
+                  <option value="04:00 PM - 05:00 PM">04:00 PM - 05:00 PM</option>
+                  <option value="05:00 PM - 06:00 PM">05:00 PM - 06:00 PM</option>
+                  <option value="06:00 PM - 07:00 PM">06:00 PM - 07:00 PM</option>
+                  <option value="07:00 PM - 08:00 PM">07:00 PM - 08:00 PM</option>
+                </select>
+                {formik.touched.selectedTimeSlot && formik.errors.selectedTimeSlot && (
+                  <div className="text-rose-500 text-xs font-semibold flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" /> {formik.errors.selectedTimeSlot}</div>
+                )}
               </div>
             </div>
 
