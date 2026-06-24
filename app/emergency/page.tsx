@@ -5,6 +5,7 @@ import Link from "next/link";
 import axios from "axios";
 import { pusherClient } from "@/utils/libs/pusherClient";
 import { getSpecialistName } from "../client/utils";
+import { requestWebNotificationPermission, showWebNotification } from "@/utils/webNotification";
 
 // Emergency types options
 const EMERGENCY_TYPES = [
@@ -54,6 +55,7 @@ export default function EmergencyPage() {
 
   // Check auth on mount
   useEffect(() => {
+    requestWebNotificationPermission();
     async function checkAuth() {
       try {
         const res = await axios.get("/api/auth/me");
@@ -71,6 +73,20 @@ export default function EmergencyPage() {
       }
     }
     checkAuth();
+  }, []);
+
+  // Request Web Camera & Microphone permissions on mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          console.log("Web Camera/Mic permission granted.");
+          stream.getTracks().forEach(track => track.stop());
+        })
+        .catch((err) => {
+          console.warn("Web Camera/Mic permission denied or unavailable:", err);
+        });
+    }
   }, []);
 
   // Capture GPS on select-type stage
@@ -109,6 +125,7 @@ export default function EmergencyPage() {
     channel.bind("status-update", (data: any) => {
       if (data.status) {
         setSosStatus(data.status);
+        showWebNotification("🚨 SOS Status Update", `Emergency status has been updated to: ${data.status.toUpperCase()}`);
         if (data.status === "completed") {
           setStage("completed");
         }
@@ -151,6 +168,9 @@ export default function EmergencyPage() {
     // Listen to real-time chat messages
     channel.bind("chat-message", (msg: any) => {
       setMessages((prev) => [...prev, msg]);
+      if (msg.senderType !== "client") {
+        showWebNotification(`✉️ SOS Msg: ${msg.senderName}`, msg.text);
+      }
     });
 
     return () => {

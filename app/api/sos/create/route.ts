@@ -3,6 +3,7 @@ import { connectDB } from "@/utils/dbConnect";
 import SOSRequest from "@/utils/models/SOSRequest";
 import Advocate from "@/utils/models/advocate";
 import { pusher } from "@/utils/libs/pusher";
+import { sendPushNotification } from "@/utils/sendPushNotification";
 
 export async function POST(req: Request) {
   try {
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
       }).limit(5);
     }
 
-    // Fallback: If no verified available lawyers are found, fall back to any available lawyers to ensure request reaches someone
+    // Fallback: If no verified available lawyers are found, fall back to any available lawyers
     if (nearestLawyers.length === 0) {
       console.log("No verified available lawyers found. Falling back to any available lawyers.");
       try {
@@ -91,7 +92,6 @@ export async function POST(req: Request) {
     await sos.save();
 
     // 3. Broadcast the SOS alert via Pusher
-    // We send targetLawyerIds so only those lawyers process the notification
     await pusher.trigger("lawyers", "new-sos", {
       sosId: sos._id.toString(),
       emergencyType,
@@ -101,6 +101,22 @@ export async function POST(req: Request) {
       targetLawyers: targetLawyerIds,
     });
 
+    // 4. Dispatch Firebase Push Notifications to all target advocates
+    for (const lawyer of nearestLawyers) {
+      if (lawyer.fcmToken) {
+        try {
+          await sendPushNotification(
+            lawyer.fcmToken,
+            "🚨 CRITICAL SOS EMERGENCY ALERT!",
+            `New ${emergencyType} request in your area! Tap to accept immediately.`,
+            { sosId: sos._id.toString(), type: "sos_broadcast" }
+          );
+        } catch (fcmErr) {
+          console.error(`Failed to send SOS push notification to lawyer ${lawyer._id}:`, fcmErr);
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       sosId: sos._id,
@@ -108,7 +124,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("SOS Create Error:", error);
-
     return NextResponse.json(
       {
         success: false,

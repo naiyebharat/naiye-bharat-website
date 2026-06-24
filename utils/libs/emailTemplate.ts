@@ -277,7 +277,7 @@ export const sendClientOrderConfirmTemplate = (details) => {
               <td style="padding:22px 40px;">
                 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0f0f23; border:1px solid #2a2a4a; border-radius:14px; padding:18px 22px;">
                   ${orderDetailRow("Order ID", orderId)}
-                  ${orderDetailRow("Assigned Expert", expertName)}
+                  ${orderDetailRow("Assigned Expert", "Naiye Bharat Specialist")}
                   ${orderDetailRow("Specialty", specialty)}
                   ${orderDetailRow("Language", language)}
                   ${orderDetailRow("Amount Paid", `INR ${amount || 0}`)}
