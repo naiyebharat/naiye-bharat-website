@@ -90,8 +90,8 @@ export default function AdvocateDashboardPage() {
   const [activeClient, setActiveClient] = useState<ClientRequest | null>(null);
   const [isConsultationChatOpen, setIsConsultationChatOpen] = useState(false);
 
-  const fetchRequestPipeline = useCallback(async () => {
-    setRoomsLoading(true);
+  const fetchRequestPipeline = useCallback(async (isInitial = false) => {
+    if (isInitial) setRoomsLoading(true);
     try {
       const [roomsRes, sosRes] = await Promise.all([
         axios.get("/api/advocate/rooms"),
@@ -109,7 +109,7 @@ export default function AdvocateDashboardPage() {
       console.error("Request pipeline fetch error:", err);
       triggerToast("Sync Failed", "Could not load latest client requests.", "error");
     } finally {
-      setRoomsLoading(false);
+      if (isInitial) setRoomsLoading(false);
     }
   }, []);
 
@@ -123,7 +123,7 @@ export default function AdvocateDashboardPage() {
           setUser(res.data.user);
           // Check if lawyer has an active SOS from DB
           checkActiveSOS();
-          fetchRequestPipeline();
+          fetchRequestPipeline(true);
           fetchSOSHistory();
         }
       } catch (err) {
@@ -136,7 +136,7 @@ export default function AdvocateDashboardPage() {
   useEffect(() => {
     if (!advocateProfile) return;
 
-    const interval = setInterval(fetchRequestPipeline, 5000);
+    const interval = setInterval(() => fetchRequestPipeline(false), 5000);
     return () => clearInterval(interval);
   }, [advocateProfile, fetchRequestPipeline]);
 
