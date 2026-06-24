@@ -19,6 +19,8 @@ interface OrderData {
   phoneNumber?: string;
   razorpayOrderId?: string;
   issueDescription?: string;
+  selectedDate?: string;
+  selectedTimeSlot?: string;
 }
 
 interface DetailOrderViewProps {
@@ -132,6 +134,22 @@ export default function DetailOrderView({ isOpen, order, onClose }: DetailOrderV
                   </span>
                   <span className="font-extrabold text-slate-900 dark:text-white">{order.language || "Not Specified"}</span>
                 </div>
+                {order.selectedDate && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-2 font-bold text-slate-600 dark:text-slate-400">
+                      <Clock className="w-4 h-4 text-slate-400" /> Scheduled Date:
+                    </span>
+                    <span className="font-extrabold text-slate-900 dark:text-white">{order.selectedDate}</span>
+                  </div>
+                )}
+                {order.selectedTimeSlot && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-2 font-bold text-slate-600 dark:text-slate-400">
+                      <Clock className="w-4 h-4 text-slate-400" /> Time Slot:
+                    </span>
+                    <span className="font-extrabold text-slate-900 dark:text-white">{order.selectedTimeSlot}</span>
+                  </div>
+                )}
                 <div className="flex flex-col gap-1.5 pt-1">
                   <span className="font-bold text-slate-600 dark:text-slate-400 text-[11px]">Specialty Core:</span>
                   <span className="text-center font-black text-indigo-600 dark:text-indigo-400 uppercase text-[10px] bg-indigo-55/40 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-900/50 py-1 rounded-md tracking-wider">

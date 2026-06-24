@@ -21,6 +21,8 @@ const OrderSchema = new mongoose.Schema({
   currency: { type: String, default: "INR" },
   razorpayOrderId: { type: String, unique: true, sparse: true },
   razorpayPaymentId: { type: String },
+  selectedDate: { type: String },
+  selectedTimeSlot: { type: String },
   
   // Yeh payment gateway ke liye hai
   status: {

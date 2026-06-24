@@ -8,6 +8,27 @@ import axios from "axios";
 import Toast, { ToastData } from "@/app/advocate/components/Toast";
 import LoginModal from "./LoginModal";
 
+const LogoSVG = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="48" fill="#1a1a1a" stroke="#d4af37" strokeWidth="2" />
+    <circle cx="50" cy="50" r="42" fill="none" stroke="#d4af37" strokeWidth="1" strokeDasharray="3,2" />
+    <rect x="47" y="25" width="6" height="45" fill="#d4af37" />
+    <rect x="40" y="65" width="20" height="8" rx="4" fill="#d4af37" />
+    <rect x="44" y="20" width="12" height="6" rx="3" fill="#d4af37" />
+    <rect x="30" y="35" width="40" height="3" fill="#d4af37" />
+    <circle cx="38" cy="40" r="2" fill="#d4af37" />
+    <line x1="38" y1="42" x2="38" y2="55" stroke="#d4af37" strokeWidth="1" />
+    <line x1="38" y1="42" x2="32" y2="48" stroke="#d4af37" strokeWidth="1" />
+    <line x1="38" y1="42" x2="44" y2="48" stroke="#d4af37" strokeWidth="1" />
+    <path d="M 30 48 Q 38 55 46 48 L 46 52 Q 38 59 30 52 Z" fill="#d4af37" />
+    <circle cx="62" cy="40" r="2" fill="#d4af37" />
+    <line x1="62" y1="42" x2="62" y2="55" stroke="#d4af37" strokeWidth="1" />
+    <line x1="62" y1="42" x2="56" y2="48" stroke="#d4af37" strokeWidth="1" />
+    <line x1="62" y1="42" x2="68" y2="48" stroke="#d4af37" strokeWidth="1" />
+    <path d="M 54 48 Q 62 55 70 48 L 70 52 Q 62 59 54 52 Z" fill="#d4af37" />
+  </svg>
+);
+
 interface Expert {
   _id: string;
   name: string;
@@ -175,7 +196,7 @@ export default function ExpertMatches({ orderId, matchCriteria, onBack, onUnlock
         amount: orderData.order.amount,
         currency: orderData.order.currency,
         name: "NaiyeBharat",
-        description: `Consultation with ${expert.name}`,
+        description: "Consultation with Naiye Bharat specialist",
         order_id: orderData.order.id,
         handler: async function (response: any) {
           try {
@@ -329,20 +350,12 @@ export default function ExpertMatches({ orderId, matchCriteria, onBack, onUnlock
                     }`}
                 >
                   <div className="flex flex-col sm:flex-row items-center gap-5 w-full md:w-auto text-center sm:text-left flex-grow">
-                    {(expert.avatar || expert.videoUrl) && (expert.avatar || expert.videoUrl).length > 0 && !(expert.avatar || expert.videoUrl).includes("ui-avatars.com") ? (
-                      <img
-                        src={expert.avatar || expert.videoUrl}
-                        alt={expert.name}
-                        className="w-20 h-20 sm:w-[72px] sm:h-[72px] rounded-xl object-cover border-[3px] border-slate-300 dark:border-slate-700/60 shadow-lg flex-shrink-0"
-                      />
-                    ) : (
-                      <div className={`w-20 h-20 sm:w-[72px] sm:h-[72px] rounded-xl ${avatarColors[colorIndex]} flex items-center justify-center border-[3px] border-slate-300 dark:border-slate-700/60 shadow-lg flex-shrink-0`}>
-                        <span className="text-2xl font-black text-white tracking-tight">{initials}</span>
-                      </div>
-                    )}
+                    <div className="w-20 h-20 sm:w-[72px] sm:h-[72px] rounded-xl bg-slate-900 border-[3px] border-slate-300 dark:border-slate-700/60 shadow-lg p-2 flex-shrink-0 flex items-center justify-center">
+                      <LogoSVG />
+                    </div>
 
                     <div className="space-y-2 w-full sm:w-auto">
-                      <h3 className="text-xl md:text-[22px] font-bold text-slate-900 dark:text-white tracking-tight">{expert.name}</h3>
+                      <h3 className="text-xl md:text-[22px] font-bold text-slate-900 dark:text-white tracking-tight">Naiye Bharat Specialist</h3>
                       <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center sm:justify-start gap-1.5">
                         <GraduationCap className="w-3.5 h-3.5 text-emerald-600 dark:text-[#00c2a8]" /> {expert.qualification || "Legal Expert"}
                       </p>

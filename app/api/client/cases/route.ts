@@ -80,7 +80,9 @@ export async function GET(req: NextRequest) {
         language: order.language || "English",
         sessionCost: order.sessionCost || order.amount || 0,
         razorpayOrderId: order.razorpayOrderId || "N/A",
-        issueDescription: order.issueDescription || ""
+        issueDescription: order.issueDescription || "",
+        selectedDate: order.selectedDate || "",
+        selectedTimeSlot: order.selectedTimeSlot || ""
       });
     }
 

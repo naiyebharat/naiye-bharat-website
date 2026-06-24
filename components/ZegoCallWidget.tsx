@@ -35,18 +35,65 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
   const [activeCall, setActiveCall] = useState<CallInvite | null>(null);
   const [joining, setJoining] = useState(false);
   const [errorText, setErrorText] = useState("");
+  const [isCallConnected, setIsCallConnected] = useState(false);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const pendingCandidates = useRef<RTCIceCandidateInit[]>([]);
+  const pendingSignals = useRef<{ signal: any; from: { id: string } }[]>([]);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingCallType, setPendingCallType] = useState<CallType | null>(null);
 
   const roomId = useMemo(() => (sosId ? `sos_${sosId.replace(/[^a-zA-Z0-9_-]/g, "")}` : ""), [sosId]);
   const isCaller = useRef(false);
+
+  const handleWebRTCSignal = async (signal: any, from: { id: string }) => {
+    const pc = pcRef.current;
+    if (!pc) return;
+
+    try {
+      if (signal.sdp) {
+        if (signal.sdp.type === "offer") {
+          if (pc.signalingState === "stable") {
+            await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            await axios.post("/api/sos/call", {
+              sosId,
+              action: "signal",
+              roomId: signal.roomId || roomId,
+              signal: { sdp: pc.localDescription },
+            });
+          } else {
+            console.warn("Received offer but signalingState is not stable:", pc.signalingState);
+          }
+        } else if (signal.sdp.type === "answer") {
+          if (pc.signalingState === "have-local-offer") {
+            await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+          } else {
+            console.warn("Received answer but signalingState is not have-local-offer:", pc.signalingState);
+          }
+        }
+
+        // Process queued ICE candidates
+        while (pendingCandidates.current.length > 0) {
+          const cand = pendingCandidates.current.shift();
+          if (cand) await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(() => undefined);
+        }
+      } else if (signal.candidate) {
+        if (pc.remoteDescription && pc.remoteDescription.type) {
+          await pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(() => undefined);
+        } else {
+          pendingCandidates.current.push(signal.candidate);
+        }
+      }
+    } catch (err) {
+      console.error("WebRTC signal handling failed:", err);
+    }
+  };
 
   // Initialize WebRTC connection
   const setupPeerConnection = async (callType: CallType, inviteRoomId: string) => {
@@ -99,14 +146,27 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
       if (remoteVideoRef.current && event.streams[0]) {
         remoteVideoRef.current.srcObject = event.streams[0];
         remoteVideoRef.current.play().catch(() => undefined);
+        setIsCallConnected(true);
       }
     };
 
     pc.oniceconnectionstatechange = () => {
+      if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
+        setIsCallConnected(true);
+      }
       if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
         void leaveCall();
       }
     };
+
+    // Process any queued signals
+    if (pendingSignals.current.length > 0) {
+      const queued = [...pendingSignals.current];
+      pendingSignals.current = [];
+      for (const item of queued) {
+        await handleWebRTCSignal(item.signal, item.from);
+      }
+    }
 
     return pc;
   };
@@ -126,6 +186,10 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
       
       // If we are the caller, we initiate the WebRTC offer when accepted
       if (isCaller.current && pcRef.current) {
+        if (pcRef.current.signalingState !== "stable") {
+          console.warn("Signaling state is not stable, ignoring duplicate call-accepted. State:", pcRef.current.signalingState);
+          return;
+        }
         try {
           const offer = await pcRef.current.createOffer();
           await pcRef.current.setLocalDescription(offer);
@@ -143,46 +207,11 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
 
     channel.bind("webrtc-signal", async (data: { signal: any; from: { id: string } }) => {
       if (String(data.from.id) === String(user.id)) return;
-      const pc = pcRef.current;
-      const { signal } = data;
-
-      if (!pc) return;
-
-      try {
-        if (signal.sdp) {
-          if (signal.sdp.type === "offer") {
-            if (pc.signalingState === "stable") {
-              await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
-              const answer = await pc.createAnswer();
-              await pc.setLocalDescription(answer);
-              await axios.post("/api/sos/call", {
-                sosId,
-                action: "signal",
-                roomId: data.signal?.roomId || roomId,
-                signal: { sdp: pc.localDescription },
-              });
-            }
-          } else if (signal.sdp.type === "answer") {
-            if (pc.signalingState === "have-local-offer") {
-              await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
-            }
-          }
-
-          // Process queued ICE candidates
-          while (pendingCandidates.current.length > 0) {
-            const cand = pendingCandidates.current.shift();
-            if (cand) await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(() => undefined);
-          }
-        } else if (signal.candidate) {
-          if (pc.remoteDescription && pc.remoteDescription.type) {
-            await pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(() => undefined);
-          } else {
-            pendingCandidates.current.push(signal.candidate);
-          }
-        }
-      } catch (err) {
-        console.error("WebRTC signal handling failed:", err);
+      if (!pcRef.current) {
+        pendingSignals.current.push(data);
+        return;
       }
+      await handleWebRTCSignal(data.signal, data.from);
     });
 
     channel.bind("call-ended", () => {
@@ -237,17 +266,17 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
     isCaller.current = false;
 
     try {
+      setActiveCall(invite);
+      setIncomingCall(null);
+
+      await setupPeerConnection(invite.callType, invite.roomId);
+
       await axios.post("/api/sos/call", {
         sosId: invite.sosId,
         action: "accept",
         callType: invite.callType,
         roomId: invite.roomId,
       });
-
-      setActiveCall(invite);
-      setIncomingCall(null);
-
-      await setupPeerConnection(invite.callType, invite.roomId);
     } catch (error: any) {
       console.error("Accept call failed:", error);
       setErrorText("Could not join WebRTC call.");
@@ -259,6 +288,8 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
   const leaveCall = async () => {
     isCaller.current = false;
     pendingCandidates.current = [];
+    pendingSignals.current = [];
+    setIsCallConnected(false);
 
     // Stop streams
     if (localStreamRef.current) {
@@ -288,6 +319,27 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
     }
     await leaveCall();
   };
+
+  const LogoSVG = () => (
+    <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="48" fill="#1a1a1a" stroke="#d4af37" strokeWidth="2" />
+      <circle cx="50" cy="50" r="42" fill="none" stroke="#d4af37" strokeWidth="1" strokeDasharray="3,2" />
+      <rect x="47" y="25" width="6" height="45" fill="#d4af37" />
+      <rect x="40" y="65" width="20" height="8" rx="4" fill="#d4af37" />
+      <rect x="44" y="20" width="12" height="6" rx="3" fill="#d4af37" />
+      <rect x="30" y="35" width="40" height="3" fill="#d4af37" />
+      <circle cx="38" cy="40" r="2" fill="#d4af37" />
+      <line x1="38" y1="42" x2="38" y2="55" stroke="#d4af37" strokeWidth="1" />
+      <line x1="38" y1="42" x2="32" y2="48" stroke="#d4af37" strokeWidth="1" />
+      <line x1="38" y1="42" x2="44" y2="48" stroke="#d4af37" strokeWidth="1" />
+      <path d="M 30 48 Q 38 55 46 48 L 46 52 Q 38 59 30 52 Z" fill="#d4af37" />
+      <circle cx="62" cy="40" r="2" fill="#d4af37" />
+      <line x1="62" y1="42" x2="62" y2="55" stroke="#d4af37" strokeWidth="1" />
+      <line x1="62" y1="42" x2="56" y2="48" stroke="#d4af37" strokeWidth="1" />
+      <line x1="62" y1="42" x2="68" y2="48" stroke="#d4af37" strokeWidth="1" />
+      <path d="M 54 48 Q 62 55 70 48 L 70 52 Q 62 59 54 52 Z" fill="#d4af37" />
+    </svg>
+  );
 
   if (!sosId || !user) return null;
 
@@ -396,8 +448,56 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
             </div>
 
             <div className="grid min-h-[360px] grid-cols-1 gap-3 p-4 md:grid-cols-2">
-              <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
-                <video ref={remoteVideoRef} autoPlay playsInline className="h-full min-h-[320px] w-full object-cover" />
+              <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900 min-h-[320px] flex items-center justify-center">
+                <video
+                  ref={remoteVideoRef}
+                  autoPlay
+                  playsInline
+                  className={`h-full min-h-[320px] w-full object-cover ${isCallConnected ? "block" : "hidden"}`}
+                />
+                {!isCallConnected && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 p-6 text-center">
+                    {user.role === "client" ? (
+                      <div className="flex flex-col items-center justify-center space-y-4">
+                        <div className="relative flex items-center justify-center">
+                          {/* Pulsing ring animation */}
+                          <div className="absolute h-24 w-24 rounded-full bg-emerald-500/20 animate-ping" />
+                          <div className="absolute h-28 w-28 rounded-full border border-emerald-500/30 animate-pulse" />
+                          <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-slate-900 p-3 shadow-xl">
+                            <LogoSVG />
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <h4 className="text-xs font-black text-white uppercase tracking-wider">NaiyeBharat</h4>
+                          <p className="mt-2 text-[10px] font-bold text-emerald-400 tracking-widest uppercase animate-pulse flex items-center gap-1.5 justify-center">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                            ringing
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center space-y-4">
+                        <div className="relative flex items-center justify-center">
+                          {/* Pulsing ring animation */}
+                          <div className="absolute h-24 w-24 rounded-full bg-amber-500/20 animate-ping" />
+                          <div className="absolute h-28 w-28 rounded-full border border-amber-500/30 animate-pulse" />
+                          <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-slate-900 shadow-xl">
+                            <span className="text-3xl font-black text-[#d4af37]">
+                              {(peerLabel || "Client").charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <h4 className="text-xs font-black text-white uppercase tracking-wider">{peerLabel || "Client"}</h4>
+                          <p className="mt-2 text-[10px] font-bold text-amber-400 tracking-widest uppercase animate-pulse flex items-center gap-1.5 justify-center">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
+                            ringing
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="absolute bottom-3 left-3 rounded-lg bg-black/50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
                   Remote
                 </div>

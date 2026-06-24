@@ -18,6 +18,8 @@ export interface CaseOrder {
   sessionCost?: number;
   razorpayOrderId?: string;
   issueDescription?: string;
+  selectedDate?: string;
+  selectedTimeSlot?: string;
 }
 
 interface OrderListProps {
