@@ -70,6 +70,10 @@ const AdvocateSchema = new Schema(
       type: String,
       default: "",
     },
+    fcmToken: {
+      type: String,
+      default: "",
+    },
     currentLocation: {
       type: PointSchema,
       default: undefined,

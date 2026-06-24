@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/utils/dbConnect";
 import SOSMessage from "@/utils/models/SOSMessage";
+import SOSRequest from "@/utils/models/SOSRequest";
+import User from "@/utils/models/User";
+import Advocate from "@/utils/models/advocate";
 import { pusher } from "@/utils/libs/pusher";
+import { sendPushNotification } from "@/utils/sendPushNotification";
 
 // POST: Send a new SOS chat message (persists + broadcasts)
 export async function POST(req: Request) {
@@ -35,6 +39,38 @@ export async function POST(req: Request) {
 
     // Broadcast via Pusher for real-time delivery
     await pusher.trigger(`sos-${sosId}`, "chat-message", messageData);
+
+    // Send push notification to the recipient
+    try {
+      const sos = await SOSRequest.findById(sosId);
+      if (sos) {
+        let recipientToken = "";
+        if (senderType === "client") {
+          if (sos.lawyerId) {
+            const advocate = await Advocate.findById(sos.lawyerId);
+            if (advocate && advocate.fcmToken) {
+              recipientToken = advocate.fcmToken;
+            }
+          }
+        } else {
+          const client = await User.findById(sos.clientId);
+          if (client && client.fcmToken) {
+            recipientToken = client.fcmToken;
+          }
+        }
+
+        if (recipientToken) {
+          await sendPushNotification(
+            recipientToken,
+            `🚨 SOS Msg: ${senderName}`,
+            text.length > 60 ? `${text.substring(0, 60)}...` : text,
+            { sosId, type: "sos_chat" }
+          );
+        }
+      }
+    } catch (notifErr) {
+      console.error("Failed to send SOS chat push notification:", notifErr);
+    }
 
     return NextResponse.json({ success: true, message: messageData });
   } catch (error: any) {

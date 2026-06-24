@@ -13,6 +13,7 @@ export interface IUser extends Document {
   otp?: string;
   otpExpiry?: Date;
   deleteAt?: Date; 
+  fcmToken?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,6 +59,10 @@ const UserSchema: Schema<IUser> = new Schema(
       default: false,
     },
     avatar: {
+      type: String,
+      default: "",
+    },
+    fcmToken: {
       type: String,
       default: "",
     },
