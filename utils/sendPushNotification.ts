@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import * as path from "path";
+import * as fs from "fs";
 
 // Initialize Firebase Admin SDK once
 if (admin.apps.length === 0) {
@@ -11,7 +12,8 @@ if (admin.apps.length === 0) {
       console.log("Firebase Admin SDK loaded from environment variable.");
     } else {
       const serviceAccountPath = path.join(process.cwd(), "serviceAccountKey.json");
-      serviceAccount = require(serviceAccountPath);
+      const fileContent = fs.readFileSync(serviceAccountPath, "utf8");
+      serviceAccount = JSON.parse(fileContent);
       console.log("Firebase Admin SDK loaded from local serviceAccountKey.json.");
     }
 
