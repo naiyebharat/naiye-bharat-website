@@ -4,8 +4,16 @@ import * as path from "path";
 // Initialize Firebase Admin SDK once
 if (admin.apps.length === 0) {
   try {
-    const serviceAccountPath = path.join(process.cwd(), "serviceAccountKey.json");
-    const serviceAccount = require(serviceAccountPath);
+    let serviceAccount: any;
+
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      console.log("Firebase Admin SDK loaded from environment variable.");
+    } else {
+      const serviceAccountPath = path.join(process.cwd(), "serviceAccountKey.json");
+      serviceAccount = require(serviceAccountPath);
+      console.log("Firebase Admin SDK loaded from local serviceAccountKey.json.");
+    }
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
