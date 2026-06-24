@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     // --- Action: Get All Lawyers for Verification ---
     if (action === "get-all-lawyers") {
-      const lawyers = await Advocate.find().select("name specialty experience isVerifiedSOS sosStatus email phoneNumber").lean();
+      const lawyers = await Advocate.find({ role: { $ne: "admin" } }).select("name specialty experience isVerifiedSOS sosStatus email phoneNumber").lean();
       return NextResponse.json({ success: true, lawyers });
     }
 
@@ -197,6 +197,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Payment released to lawyer successfully",
+        sos,
+      });
+    }
+
+    // --- Action: Update Status ---
+    if (action === "update-status") {
+      const { sosId, status } = body;
+      if (!sosId || !status) {
+        return NextResponse.json({ success: false, message: "sosId and status are required" }, { status: 400 });
+      }
+
+      const sos = await SOSRequest.findById(sosId);
+      if (!sos) {
+        return NextResponse.json({ success: false, message: "SOS request not found" }, { status: 404 });
+      }
+
+      sos.status = status;
+      await sos.save();
+
+      // Broadcast new state to admin and client
+      await pusher.trigger("admin-sos", "sos-updated", {
+        sosId: sosId.toString(),
+        status,
+      });
+
+      await pusher.trigger(`sos-${sosId}`, "status-update", {
+        status,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `SOS status updated to ${status} successfully`,
         sos,
       });
     }

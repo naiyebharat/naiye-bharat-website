@@ -7,6 +7,7 @@ import { pusherClient } from "@/utils/libs/pusherClient";
 import ThemeToggle from "../../advocate/components/ThemeToggle";
 import TelemetryFeedList from "../components/TelemetryFeedList";
 import LawyerVerificationRegister from "../components/LawyerVerificationRegister";
+import DetailSosOrderView from "../components/DetailSosOrderView";
 
 export default function AdminSOSPage() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -17,6 +18,7 @@ export default function AdminSOSPage() {
   const [lawyers, setLawyers] = useState<any[]>([]);
   const [availableLawyers, setAvailableLawyers] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [selectedSOSOrder, setSelectedSOSOrder] = useState<any | null>(null);
 
   // UI tabs and filters
   const [activeTab, setActiveTab] = useState<"dashboard" | "verification">("dashboard");
@@ -359,22 +361,22 @@ export default function AdminSOSPage() {
               <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white uppercase">
                 NAIYE <span className="text-emerald-600 dark:text-[#00c2a8]">BHARAT</span>
               </span>
-              <span className="text-[10px] font-black bg-red-50 text-red-700 border border-red-200/60 px-2.5 py-1 rounded-md dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20 uppercase tracking-widest animate-pulse">
+              <span className="hidden md:block text-[10px] font-black bg-red-50 text-red-700 border border-red-200/60 px-2.5 py-1 rounded-md dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20 uppercase tracking-widest animate-pulse">
                 SOS COMMAND CENTER
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider mt-1.5 font-bold">
+            <p className="hidden md:block text-[10px] text-slate-600 dark:text-gray-400 uppercase tracking-wider mt-1.5 font-bold">
               Real-time emergency dispatcher & verification deck
             </p>
           </div>
 
           <div className="flex items-center gap-4">
             <Link
-              href="/admin"
-              className="px-4 py-2 border border-slate-200 dark:border-slate-850 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors"
-            >
-              Consultation Console
-            </Link>
+  href="/admin"
+  className="px-4 py-2 border border-slate-300 bg-white dark:bg-transparent dark:border-slate-850 hover:bg-slate-100 hover:border-slate-400 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200"
+>
+  Consultation
+</Link>
             <ThemeToggle theme={theme} onToggleTheme={handleToggleTheme} />
           </div>
         </div>
@@ -386,7 +388,7 @@ export default function AdminSOSPage() {
             className={`flex-1 py-3 text-center text-xs uppercase tracking-wider font-bold rounded-xl transition-all ${
               activeTab === "dashboard"
                 ? "bg-white dark:bg-[#0f1934] text-slate-900 dark:text-white shadow-md font-black"
-                : "text-slate-500 hover:text-slate-200"
+                : "text-slate-500"
             }`}
           >
             SOS Monitor
@@ -396,7 +398,7 @@ export default function AdminSOSPage() {
             className={`flex-1 py-3 text-center text-xs uppercase tracking-wider font-bold rounded-xl transition-all ${
               activeTab === "verification"
                 ? "bg-white dark:bg-[#0f1934] text-slate-900 dark:text-white shadow-md font-black"
-                : "text-slate-500 hover:text-slate-200"
+                : "text-slate-500"
             }`}
           >
             Lawyer Verification
@@ -415,43 +417,26 @@ export default function AdminSOSPage() {
               <div className="space-y-6">
                 
                 {/* Statistics panel */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white dark:bg-[#0c142b] p-5 rounded-2xl border border-slate-200 dark:border-slate-850 shadow-sm">
-                    <div className="text-[10px] uppercase font-bold text-slate-400">Active Emergencies</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-white dark:bg-[#0c142b] p-5 rounded-2xl border border-slate-400 dark:border-slate-850 shadow-lg">
+                    <div className="text-[10px] uppercase font-bold text-slate-700">Active Emergencies</div>
                     <div className="text-2xl font-black text-red-500 mt-1">{activeSOSCount}</div>
-                    <div className="text-[9px] text-slate-500 mt-1 uppercase">Dispatch units active</div>
+                    <div className="text-[9px] text-slate-700 mt-1 uppercase">Dispatch units active</div>
                   </div>
-                  <div className="bg-white dark:bg-[#0c142b] p-5 rounded-2xl border border-slate-200 dark:border-slate-850 shadow-sm">
-                    <div className="text-[10px] uppercase font-bold text-slate-400">Cases Completed</div>
+                  <div className="bg-white dark:bg-[#0c142b] p-5 rounded-2xl border border-slate-400 dark:border-slate-850 shadow-lg">
+                    <div className="text-[10px] uppercase font-bold text-slate-700">Cases Completed</div>
                     <div className="text-2xl font-black text-green-500 mt-1">{completedSOSCount}</div>
-                    <div className="text-[9px] text-slate-500 mt-1 uppercase">Incidents successfully resolved</div>
+                    <div className="text-[9px] text-slate-700 mt-1 uppercase">Incidents successfully resolved</div>
                   </div>
-                  <div className="bg-white dark:bg-[#0c142b] p-5 rounded-2xl border border-slate-200 dark:border-slate-850 shadow-sm">
-                    <div className="text-[10px] uppercase font-bold text-slate-400">Total Payments Paid</div>
+                  <div className="bg-white dark:bg-[#0c142b] p-5 rounded-2xl border border-slate-400 dark:border-slate-850 shadow-lg">
+                    <div className="text-[10px] uppercase font-bold text-slate-700">Total Payments Paid</div>
                     <div className="text-2xl font-black text-slate-800 dark:text-white mt-1">₹{totalPaid.toLocaleString()}</div>
-                    <div className="text-[9px] text-slate-500 mt-1 uppercase">₹4,500 authorization rate</div>
-                  </div>
-                  <div className="bg-white dark:bg-[#0c142b] p-5 rounded-2xl border border-slate-200 dark:border-slate-850 shadow-sm">
-                    <div className="text-[10px] uppercase font-bold text-slate-400">Admin Commission (20%)</div>
-                    <div className="text-2xl font-black text-emerald-500 mt-1">₹{totalCommission.toLocaleString()}</div>
-                    <div className="text-[9px] text-slate-500 mt-1 uppercase">Commission pool generated</div>
+                    <div className="text-[9px] text-slate-700 mt-1 uppercase">₹4,500 authorization rate</div>
                   </div>
                 </div>
 
-                {/* Dashboard layout grid: Map + Table */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  
-                  {/* Overview map */}
-                  <div className="lg:col-span-7 bg-white dark:bg-[#0c142b] border border-slate-200 dark:border-slate-850 rounded-[30px] p-5 shadow-sm min-h-[350px] flex flex-col justify-between overflow-hidden">
-                    <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-450 mb-3 flex items-center gap-2">
-                      <i className="fas fa-satellite-dish text-red-500 animate-pulse"></i> Telemetry Incident Tracking Map
-                    </div>
-                    <div className="flex-1 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-850 h-[300px]">
-                      <div id={mapContainerId} className="w-full h-full bg-slate-900" />
-                    </div>
-                  </div>
-
-                  {/* Active SOS requests management ledger */}
+                {/* Active SOS requests management ledger */}
+                <div className="w-full">
                   <TelemetryFeedList
                     filteredRequests={filteredRequests}
                     filterStatus={filterStatus}
@@ -459,6 +444,8 @@ export default function AdminSOSPage() {
                     adminProfile={adminProfile}
                     openReassignModal={openReassignModal}
                     handleReleasePayment={handleReleasePayment}
+                    onViewOrder={setSelectedSOSOrder}
+                    onRefresh={fetchData}
                   />
                 </div>
               </div>
@@ -552,6 +539,11 @@ export default function AdminSOSPage() {
           </div>
         </div>
       )}
+      <DetailSosOrderView
+        isOpen={Boolean(selectedSOSOrder)}
+        order={selectedSOSOrder}
+        onClose={() => setSelectedSOSOrder(null)}
+      />
     </main>
   );
 }
