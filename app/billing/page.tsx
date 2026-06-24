@@ -35,7 +35,7 @@ export default function Billing() {
             <div className="bg-slate-50 p-8 rounded-[32px] border border-slate-100">
               <h3 className="font-bold text-oxford-900 mb-4 uppercase text-xs tracking-widest">Pricing Summary</h3>
               <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-3xl font-bold text-oxford-900">₹999</span>
+                <span className="text-3xl font-bold text-oxford-900">₹2499</span>
                 <span className="text-slate-500 text-sm">/ session</span>
               </div>
               <p className="text-slate-500 text-sm leading-relaxed italic">

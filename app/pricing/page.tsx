@@ -99,7 +99,7 @@ export default function Pricing() {
               </p>
 
               <p className="mt-4 text-2xl font-semibold">
-                ₹999
+                ₹2499
                 <span className="text-sm font-normal text-gray-500">/session</span>
               </p>
 
@@ -155,7 +155,7 @@ export default function Pricing() {
               </p>
 
               <p className="mt-4 text-2xl font-semibold">
-                ₹999
+                ₹2499
                 <span className="text-sm font-normal text-gray-400">/session</span>
               </p>
 

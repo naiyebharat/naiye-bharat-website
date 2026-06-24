@@ -223,7 +223,7 @@ export default function Home() {
       if (data.success) { showMessage("Payment successful! Your message has been sent.", "success"); (document.getElementById("contactForm") as HTMLFormElement).reset(); }
       else throw new Error("Email failed");
     } catch { showMessage("Payment successful but message delivery failed. We will contact you.", "warning"); }
-    finally { btn.disabled = false; btn.textContent = "Pay ₹999 & Submit"; }
+    finally { btn.disabled = false; btn.textContent = "Pay ₹2499 & Submit"; }
   }, [showMessage]);
 
   const verifyPayment = useCallback(async (paymentResponse: RazorpayResponse, formData: ContactFormData, BACKEND_URL: string) => {
@@ -233,7 +233,7 @@ export default function Home() {
       const data: VerifyData = await res.json();
       if (data.success) await submitForm(formData, data, BACKEND_URL);
       else throw new Error("Verify failed");
-    } catch { showMessage("Payment verification failed. Please contact support.", "error"); btn.disabled = false; btn.textContent = "Pay ₹999 & Submit"; }
+    } catch { showMessage("Payment verification failed. Please contact support.", "error"); btn.disabled = false; btn.textContent = "Pay ₹2499 & Submit"; }
   }, [showMessage, submitForm]);
 
   const startPayment = useCallback(async () => {
@@ -252,7 +252,7 @@ export default function Home() {
     };
     try {
       btn.disabled = true; btn.textContent = "Processing...";
-      const orderRes  = await fetch(`${BACKEND_URL}/api/create-order`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount: 999, currency: "INR", receipt: `receipt_${Date.now()}`, notes: { name: formData.name, email: formData.email, subject: formData.subject } }) });
+      const orderRes  = await fetch(`${BACKEND_URL}/api/create-order`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount: 2499, currency: "INR", receipt: `receipt_${Date.now()}`, notes: { name: formData.name, email: formData.email, subject: formData.subject } }) });
       const orderData: OrderData = await orderRes.json();
       if (!orderData.success) throw new Error("Order failed");
       const rzp = new window.Razorpay({
@@ -260,10 +260,10 @@ export default function Home() {
         name: "Legal Consultation", description: formData.subject, order_id: orderData.order.id,
         prefill: { name: formData.name, email: formData.email }, theme: { color: "#2563eb" },
         handler: async (r) => { await verifyPayment(r, formData, BACKEND_URL); },
-        modal: { ondismiss: () => { btn.disabled = false; btn.textContent = "Pay ₹999 & Submit"; showMessage("Payment cancelled", "error"); } },
+        modal: { ondismiss: () => { btn.disabled = false; btn.textContent = "Pay ₹2499 & Submit"; showMessage("Payment cancelled", "error"); } },
       });
       rzp.open();
-    } catch { showMessage("Error initiating payment. Please try again.", "error"); btn.disabled = false; btn.textContent = "Pay ₹999 & Submit"; }
+    } catch { showMessage("Error initiating payment. Please try again.", "error"); btn.disabled = false; btn.textContent = "Pay ₹2499 & Submit"; }
   }, [showMessage, verifyPayment]);
 
   // ── JSX ────────────────────────────────────────────────────────────────

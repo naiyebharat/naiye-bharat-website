@@ -22,7 +22,7 @@ const SEED_ADVOCATES = [
     age: 41,
     specialty: "Mental Health / Therapy",
     language: ["English", "Hindi", "Punjabi"],
-    pricing: 999,
+    pricing: 2499,
     videoUrl: "",
     isAvailable: true,
     qualification: "Clinical Psychologist & Trauma Counsellor",

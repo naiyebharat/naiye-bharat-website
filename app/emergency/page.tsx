@@ -318,6 +318,20 @@ export default function EmergencyPage() {
 
               if (createRes.data.success) {
                 setSosId(createRes.data.sosId);
+
+                // 🔔 Send payment confirmation receipt email (non-blocking)
+                axios.post("/api/sos/send-receipt", {
+                  clientName:    currentUser.name,
+                  clientEmail:   currentUser.email,
+                  paymentId:     response.razorpay_payment_id,
+                  orderId:       response.razorpay_order_id,
+                  amountPaid:    4500,
+                  emergencyType: EMERGENCY_TYPES.find((e) => e.id === selectedEmergency)?.label || "Emergency",
+                  sosId:         createRes.data.sosId,
+                }).catch((emailErr) => {
+                  console.warn("[SOS] Receipt email failed (non-critical):", emailErr);
+                });
+
                 window.location.href = `/client?sos=${createRes.data.sosId}`;
               } else {
                 alert("Failed to create SOS request");
