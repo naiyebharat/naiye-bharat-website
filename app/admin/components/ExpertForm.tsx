@@ -26,7 +26,10 @@ const ExpertValidationSchema = Yup.object({
     .max(60, "Experience value is too high")
     .required("Years of experience is required"),
 
-  specialty: Yup.string().required("Please select a specialization"),
+  specialty: Yup.array()
+    .of(Yup.string())
+    .min(1, "Please select at least one specialization")
+    .required("Please select a specialization"),
 
   language: Yup.string().required("Please specify at least one language"),
 
@@ -77,7 +80,7 @@ export default function ExpertForm({
     initialValues: {
       name: "",
       experience: "",
-      specialty: "Legal Support", // Kept default context close to active workspace
+      specialty: ["Legal Support"], // Kept default context close to active workspace
       language: "",
       pricing: "",
       videoUrl: "",
@@ -235,55 +238,90 @@ export default function ExpertForm({
             </div>
           </motion.div>
 
-          {/* Experience & Specialty Selectors Grid */}
+          {/* Experience Input */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="grid grid-cols-2 gap-3"
           >
-            <div>
-              <label className="block text-[10px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider mb-1">
-                Experience (Years)
-              </label>
-              <input
-                autoComplete="off"
-                type="number"
-                {...formik.getFieldProps("experience")}
-                placeholder="e.g. 5"
-                className="w-full bg-slate-50/50 dark:bg-[#050b1d] border border-slate-200 dark:border-slate-800/80 rounded-lg px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500 dark:focus:border-[#00c2a8] focus:ring-2 focus:ring-emerald-500/10 dark:focus:ring-0 transition-all duration-200"
-              />
-              {formik.touched.experience && formik.errors.experience && (
-                <div className="text-rose-500 text-[10px] mt-0.5 font-semibold">
-                  {formik.errors.experience}
-                </div>
-              )}
+            <label className="block text-[10px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider mb-1">
+              Experience (Years)
+            </label>
+            <input
+              autoComplete="off"
+              type="number"
+              {...formik.getFieldProps("experience")}
+              placeholder="e.g. 5"
+              className="w-full bg-slate-50/50 dark:bg-[#050b1d] border border-slate-200 dark:border-slate-800/80 rounded-lg px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500 dark:focus:border-[#00c2a8] focus:ring-2 focus:ring-emerald-500/10 dark:focus:ring-0 transition-all duration-200"
+            />
+            {formik.touched.experience && formik.errors.experience && (
+              <div className="text-rose-500 text-[10px] mt-0.5 font-semibold">
+                {formik.errors.experience}
+              </div>
+            )}
+          </motion.div>
+
+          {/* Specialty Selector (Interactive Badges) */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22 }}
+            className="space-y-1.5"
+          >
+            <label className="block text-[10px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider">
+              Core Legal Focus / Specialty (Select multiple)
+            </label>
+            <div className="flex flex-wrap gap-1.5 p-2.5 bg-slate-50/50 dark:bg-[#050b1d] border border-slate-200 dark:border-slate-800/80 rounded-xl">
+              {[
+                "Civil",
+                "Criminal",
+                "Family Law",
+                "Corporate Law",
+                "Property Dispute",
+                "Court Marriage",
+                "Pre-Legal Counselling",
+                "Post Legal Counselling",
+                "Adult Counselling",
+                "Teen Counselling",
+                "Victims Support"
+              ].map((spec) => {
+                const isSelected = formik.values.specialty.includes(spec);
+                return (
+                  <button
+                    key={spec}
+                    type="button"
+                    onClick={() => {
+                      const currentSelected = [...formik.values.specialty];
+                      if (isSelected) {
+                        formik.setFieldValue(
+                          "specialty",
+                          currentSelected.filter((s) => s !== spec)
+                        );
+                      } else {
+                        formik.setFieldValue("specialty", [
+                          ...currentSelected,
+                          spec
+                        ]);
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all duration-200 cursor-pointer ${
+                      isSelected
+                        ? "bg-emerald-600 border-emerald-600 text-white dark:bg-[#00c2a8] dark:border-[#00c2a8] dark:text-[#050b1d] shadow-sm"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 dark:bg-[#0b1329] dark:border-slate-800 dark:text-slate-400 dark:hover:border-slate-700"
+                    }`}
+                  >
+                    {spec}
+                  </button>
+                );
+              })}
             </div>
-            <div>
-              <label className="block text-[10px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider mb-1">
-                Core Legal Focus
-              </label>
-              <select
-                {...formik.getFieldProps("specialty")}
-                className="w-full bg-slate-50/50 dark:bg-[#050b1d] border border-slate-200 dark:border-slate-800/80 rounded-lg px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500 dark:focus:border-[#00c2a8] focus:ring-2 focus:ring-emerald-500/10 dark:focus:ring-0 transition-all duration-200 font-semibold"
-              >
-                <option value="Civil">Civil</option>
-                <option value="Criminal">Criminal</option>
-                <option value="Family Law">Family Law</option>
-                <option value="Corporate Law">Corporate Law</option>
-                <option value="Property Dispute">Property Dispute</option>
-                <option value="Court Marriage">Court Marriage</option>
-                <option value="Pre-Legal Counselling">
-                  Pre-Legal Counselling
-                </option>
-                <option value="Post Legal Counselling">
-                  Post Legal Counselling
-                </option>
-                <option value="Adult Counselling">Adult Counselling</option>
-                <option value="Teen Counselling">Teen Counselling</option>
-                <option value="Victims Support">Victims Support</option>
-              </select>
-            </div>
+            {formik.touched.specialty && formik.errors.specialty && (
+              <div className="text-rose-500 text-[10px] mt-0.5 font-semibold">
+                {typeof formik.errors.specialty === "string"
+                  ? formik.errors.specialty
+                  : "Please select at least one specialty"}
+              </div>
+            )}
           </motion.div>
 
           {/* Languages */}
