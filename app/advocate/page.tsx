@@ -583,7 +583,7 @@ export default function AdvocateDashboardPage() {
 
       {/* --- STANDARD CONSULTATION VIEW WORKSPACE --- */}
       {!activeSOS && (
-        <div className="flex-1 flex flex-col h-full overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           
           {/* Profile Header */}
           <ProfileHeader
@@ -656,7 +656,7 @@ export default function AdvocateDashboardPage() {
           </div>
 
           {/* Regular Client list & chat split */}
-          <div className="flex-1 flex overflow-hidden w-full relative">
+          <div className="flex-1 flex min-h-0 overflow-hidden w-full relative">
             {/* Left sidebar - Room lists */}
             <div className={`w-full md:w-85 lg:w-96 h-full flex-shrink-0 bg-white dark:bg-[#070d1e] border-r border-slate-200 dark:border-slate-900 ${isConsultationChatOpen || selectedHistorySOS ? "hidden md:flex" : "flex"} flex-col`}>
               {/* 3-Tab Strip */}
@@ -866,7 +866,7 @@ export default function AdvocateDashboardPage() {
                 </div>
               </div>
             ) : (
-              <div className={`flex-1 h-full bg-slate-50 dark:bg-[#050b1d] ${isConsultationChatOpen ? "flex" : "hidden md:flex"}`}>
+              <div className={`flex-1 flex flex-col h-full min-h-0 bg-slate-50 dark:bg-[#050b1d] overflow-hidden ${isConsultationChatOpen ? "flex" : "hidden md:flex"}`}>
                 <ChatArea
                   activeClient={activeClient}
                   onCloseChat={() => {

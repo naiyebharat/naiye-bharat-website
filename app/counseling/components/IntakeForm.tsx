@@ -5,11 +5,11 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { motion } from "framer-motion";
 import { X, CheckCircle2, AlertCircle, Sun, Moon, Sparkles } from "lucide-react";
-// import Image from "next/image";  // Commented: PNG files are corrupt, fix images before uncommenting
+import Image from "next/image";
 
-// import step1 from "@/assets/step_1.png";
-// import step2 from "@/assets/step_2.png";
-// import step3 from "@/assets/step_3.png";
+import step1 from "@/assets/step_1.png";
+import step2 from "@/assets/step_2.png";
+import step3 from "@/assets/step_3.png";
 
 const ClientIntakeSchema = Yup.object({
   clientName: Yup.string().min(3, "Name must contain at least 3 characters").required("Your full name is required"),
@@ -151,7 +151,32 @@ export default function IntakeForm({ onSuccess }: { onSuccess: (orderId: string 
           </p>
         </div>
 
-        {/* ── Three Step Images (temporarily removed — PNG files corrupt, fix later) ── */}
+        {/* ── Three Step Images ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-10">
+          <div className="flex flex-col items-center bg-white dark:bg-[#0b1329] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md text-center">
+            <div className="h-28 flex items-center justify-center">
+              <Image src={step1} alt="Step 1" className="h-24 w-auto object-contain" />
+            </div>
+            <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider mt-3">1. Tell us your problem</h4>
+            <p className="text-[10px] font-semibold text-slate-400 mt-1">Briefly explain your situation and legal needs.</p>
+          </div>
+
+          <div className="flex flex-col items-center bg-white dark:bg-[#0b1329] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md text-center">
+            <div className="h-28 flex items-center justify-center">
+              <Image src={step2} alt="Step 2" className="h-24 w-auto object-contain" />
+            </div>
+            <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider mt-3">2. Get suitable advocate</h4>
+            <p className="text-[10px] font-semibold text-slate-400 mt-1">Our system matches you with verified specialists.</p>
+          </div>
+
+          <div className="flex flex-col items-center bg-white dark:bg-[#0b1329] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md text-center">
+            <div className="h-28 flex items-center justify-center">
+              <Image src={step3} alt="Step 3" className="h-24 w-auto object-contain" />
+            </div>
+            <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider mt-3">3. Secure Transaction</h4>
+            <p className="text-[10px] font-semibold text-slate-400 mt-1">Consult safely through encrypted connection slots.</p>
+          </div>
+        </div>
 
         {/* ── Progress Tracker ── */}
         <div className="flex items-center justify-between max-w-3xl mx-auto w-full mb-8 text-xs font-bold text-slate-700 dark:text-slate-500 px-4">

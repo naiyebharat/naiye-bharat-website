@@ -50,7 +50,7 @@ export default function RequestList({ requests, activeId, onSelect, loading }: R
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 scrollbar-premium">
         {loading ? (
           <div className="flex flex-col items-center justify-center h-40 gap-3 text-slate-400">
             <Loader2 className="w-6 h-6 animate-spin text-emerald-500 dark:text-[#00c2a8]" />

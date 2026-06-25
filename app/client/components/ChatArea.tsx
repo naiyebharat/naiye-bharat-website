@@ -20,10 +20,12 @@ interface ChatAreaProps {
 
 export default function ChatArea({ activeCase, messages, onSendMessage, onCloseChat }: ChatAreaProps) {
   const [inputText, setInputText] = useState("");
-  const endRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const handleSendSubmit = (e: React.FormEvent) => {
@@ -97,7 +99,7 @@ export default function ChatArea({ activeCase, messages, onSendMessage, onCloseC
       </div>
 
       {/* Messages Canvas Container */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-premium">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-premium">
         {messages.map((msg) => {
           const isMe = msg.sender === "client";
           return (
@@ -127,7 +129,6 @@ export default function ChatArea({ activeCase, messages, onSendMessage, onCloseC
             </div>
           );
         })}
-        <div ref={endRef} />
       </div>
 
       {/* Form Submission Pipeline Input Deck */}
