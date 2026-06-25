@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // 3. Strict Server-Side Validation (Naye parameters ke sath)
-    if (!name || !experience || !specialty || !pricing || !email || !phoneNumber || !password) {
+    const isSpecialtyEmpty = !specialty || (Array.isArray(specialty) && specialty.length === 0);
+    if (!name || !experience || isSpecialtyEmpty || !pricing || !email || !phoneNumber || !password) {
       return NextResponse.json(
         { error: "Validation Failed: Missing required credentials (Name, Experience, Password, Email, Phone, Domain, Fee)." }, 
         { status: 400 }
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     const newAdvocate = await Advocate.create({
       name,
       experience: parsedExperience,
-      specialty,
+      specialty: Array.isArray(specialty) ? specialty : [specialty].filter(Boolean),
       language: Array.isArray(language) ? language : [language],
       pricing: parsedPricing,
       videoUrl: videoUrl || '',

@@ -22,7 +22,7 @@ const AdvocateSchema = new Schema(
   {
     name: { type: String, required: true },
     experience: { type: Number, required: true },
-    specialty: { type: String, required: true },
+    specialty: { type: [String], required: true },
     language: { type: [String], required: true },
     pricing: { type: Number, required: true },
     videoUrl: { type: String, default: "" },
