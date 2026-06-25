@@ -29,12 +29,14 @@ export default function ChatArea({ activeClient, onCloseChat, triggerToast }: Ch
   const [messages, setMessages] = useState<MessageNode[]>([]);
   const [sending, setSending] = useState(false);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages safely inside container div without layout shifts
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // Fetch messages for active room
@@ -136,39 +138,39 @@ export default function ChatArea({ activeClient, onCloseChat, triggerToast }: Ch
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-[#050b1d] h-full">
+    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-[#050b1d] h-full min-h-0 relative w-full overflow-hidden">
       {/* Chat Header */}
-      <div className="p-4 bg-white dark:bg-[#050b1d] border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between shadow-sm flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-600 dark:bg-[#00c2a8] flex items-center justify-center font-black text-white dark:text-[#050b1d] text-sm">
+      <div className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1329] px-4 sm:px-6 flex items-center justify-between flex-shrink-0 z-10 shadow-sm">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-600 dark:bg-[#00c2a8] flex items-center justify-center font-black text-white dark:text-[#050b1d] text-sm shadow-sm flex-shrink-0">
             {activeClient.name.charAt(0).toUpperCase()}
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">{activeClient.name}</h3>
-            <p className="text-[10px] font-bold text-slate-400 dark:text-[#00c2a8] flex items-center gap-1 uppercase tracking-wider">
+          <div className="truncate">
+            <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider truncate">{activeClient.name}</h3>
+            <p className="text-[10px] font-bold text-slate-400 dark:text-[#00c2a8] flex items-center gap-1 uppercase tracking-wider mt-0.5 truncate">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-[#00c2a8] animate-pulse" />
               Secure Session Active
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Status badge */}
           <span className="hidden md:block text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-slate-100 dark:bg-[#0b1329] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
             {activeClient.issue?.slice(0, 30)}{activeClient.issue?.length > 30 ? "..." : ""}
           </span>
           <button
             onClick={onCloseChat}
-            className="flex cursor-pointer items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all"
+            className="flex cursor-pointer items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1329] hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors shadow-sm"
           >
-            <X className="w-4 h-4" />
-            <span className="hidden md:block">Close</span>
+            <X className="w-3.5 h-3.5" />
+            <span>Close</span>
           </button>
         </div>
       </div>
 
       {/* Messages Feed */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 scrollbar-premium">
         {loadingMsgs ? (
           <div className="flex flex-col items-center justify-center h-40 gap-3 text-slate-400">
             <Loader2 className="w-6 h-6 animate-spin text-emerald-500 dark:text-[#00c2a8]" />
@@ -217,7 +219,6 @@ export default function ChatArea({ activeClient, onCloseChat, triggerToast }: Ch
             );
           })
         )}
-        <div ref={bottomRef} />
       </div>
 
       {/* Input Form */}

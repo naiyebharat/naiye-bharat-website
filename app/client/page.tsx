@@ -6,7 +6,7 @@ import OrderList, { CaseOrder } from "./components/OrderList";
 import ChatArea, { MessageData } from "./components/ChatArea";
 import SOSPanel, { ClientSOSRequest, SOSMessageData } from "./components/SOSPanel";
 import CaseDetailsDrawer from "./components/CaseDetails";
-import Toast, { ToastData } from "../advocate/components/Toast"; 
+import Toast, { ToastData } from "../advocate/components/Toast";
 import LogoutModal from "../advocate/components/LogoutModal";
 import { AnimatePresence } from "framer-motion";
 import { Briefcase, Siren } from "lucide-react";
@@ -26,7 +26,7 @@ export default function ClientPortal() {
   const [currentChatMessages, setCurrentChatMessages] = useState<MessageData[]>([]);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [selectedCase, setSelectedCase] = useState<CaseOrder | null>(null);
-  
+
   const [toast, setToast] = useState<ToastData>({
     show: false,
     title: "",
@@ -102,6 +102,8 @@ export default function ClientPortal() {
     return () => clearInterval(casesInterval);
   }, [loading, activeCaseId]);
 
+  const hasClosedSosRef = React.useRef(false);
+
   useEffect(() => {
     async function fetchSosPipeline() {
       try {
@@ -109,7 +111,9 @@ export default function ClientPortal() {
         const data = await res.json();
         if (data.success && data.sosRequests) {
           setSosRequests(data.sosRequests);
-          setActiveSosId((current) => current || data.sosRequests[0]?.id || null);
+          if (!hasClosedSosRef.current) {
+            setActiveSosId((current) => current || data.sosRequests[0]?.id || null);
+          }
         }
       } catch (err) {
         console.error("SOS Sync Error:", err);
@@ -162,11 +166,11 @@ export default function ClientPortal() {
         prev.map((item) =>
           item.id === activeSosId
             ? {
-                ...item,
-                status: data.status || item.status,
-                eta: data.eta || item.eta,
-                lawyer: data.lawyer ? sanitizedLawyer : item.lawyer,
-              }
+              ...item,
+              status: data.status || item.status,
+              eta: data.eta || item.eta,
+              lawyer: data.lawyer ? sanitizedLawyer : item.lawyer,
+            }
             : item
         )
       );
@@ -322,11 +326,10 @@ export default function ClientPortal() {
             setActiveTab("cases");
             setActiveSosId(null);
           }}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-colors ${
-            activeTab === "cases"
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-colors ${activeTab === "cases"
               ? "bg-emerald-600 dark:bg-[#00c2a8] text-white dark:text-[#050b1d] border-emerald-600 dark:border-[#00c2a8]"
               : "bg-white dark:bg-[#050b1d] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white"
-          }`}
+            }`}
         >
           <Briefcase className="w-3.5 h-3.5" /> Cases
         </button>
@@ -335,12 +338,12 @@ export default function ClientPortal() {
           onClick={() => {
             setActiveTab("sos");
             setActiveCaseId(null);
+            hasClosedSosRef.current = false; // Reset when tab is clicked
           }}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-colors ${
-            activeTab === "sos"
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-colors ${activeTab === "sos"
               ? "bg-red-600 text-white border-red-600"
               : "bg-white dark:bg-[#050b1d] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-red-600 dark:hover:text-red-400"
-          }`}
+            }`}
         >
           <Siren className="w-3.5 h-3.5" /> SOS
           {sosRequests.some((item) => ["pending", "accepted", "en_route", "arrived"].includes(item.status)) && (
@@ -356,9 +359,9 @@ export default function ClientPortal() {
               cases={casesList}
               activeCaseId={activeCaseId}
               onSelectCase={(id) => setActiveCaseId(id)}
-              onViewDetails={(item) => setSelectedCase(item)} 
+              onViewDetails={(item) => setSelectedCase(item)}
             />
-            
+
             <ChatArea
               activeCase={currentActiveCase}
               messages={currentChatMessages}
@@ -373,23 +376,29 @@ export default function ClientPortal() {
             messages={sosMessages}
             loading={sosLoading}
             user={currentUser}
-            onSelect={(id) => setActiveSosId(id)}
+            onSelect={(id) => {
+              setActiveSosId(id);
+              hasClosedSosRef.current = false; // Reset if explicitly selected
+            }}
             onSendMessage={handleSendSosMessage}
-            onClose={() => setActiveSosId(null)}
+            onClose={() => {
+              setActiveSosId(null);
+              hasClosedSosRef.current = true; // Mark as closed
+            }}
           />
         )}
       </div>
 
       {/* 🔥 Clean Outer-Mounted Global Drawer Element */}
       <AnimatePresence>
-        <CaseDetailsDrawer 
-          selectedCase={selectedCase} 
-          onClose={() => setSelectedCase(null)} 
+        <CaseDetailsDrawer
+          selectedCase={selectedCase}
+          onClose={() => setSelectedCase(null)}
         />
       </AnimatePresence>
 
       <Toast toast={toast} onClose={() => setToast((prev) => ({ ...prev, show: false }))} />
-      
+
       <LogoutModal
         isOpen={isLogoutOpen}
         onClose={() => setIsLogoutOpen(false)}
