@@ -594,8 +594,8 @@ export default function AdvocateDashboardPage() {
           />
 
           {/* SOS Status Control Panel / Sub-Bar */}
-          <div className="bg-slate-50 dark:bg-[#070d1e] border-b border-slate-200 dark:border-slate-900 px-6 py-3 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-2">
+          <div className="bg-slate-50 dark:bg-[#070d1e] border-b border-slate-200 dark:border-slate-900 px-6 py-3 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3 sm:gap-0 shadow-sm">
+            <div className="hidden sm:flex items-center gap-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 SOS Dispatch Mode:
               </span>
@@ -611,44 +611,49 @@ export default function AdvocateDashboardPage() {
             </div>
 
             {/* SOS Mode Selector */}
-            <div className="flex items-center bg-slate-200/50 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-850">
-              <button
-                disabled={statusChanging}
-                onClick={() => handleStatusChangeClick("offline")}
-                className={`px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-bold transition-all disabled:opacity-50 ${
-                  sosStatus === "offline"
-                    ? "bg-slate-300 dark:bg-slate-850 text-slate-950 dark:text-white font-black"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                }`}
-              >
-                Offline
-              </button>
-              <button
-                disabled={statusChanging}
-                onClick={() => handleStatusChangeClick("available")}
-                className={`px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-bold transition-all flex items-center gap-1.5 disabled:opacity-50 ${
-                  sosStatus === "available"
-                    ? "bg-green-600 text-white font-black animate-none"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                }`}
-              >
-                Available
-              </button>
-              <button
-                disabled={statusChanging}
-                onClick={() => handleStatusChangeClick("busy")}
-                className={`px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-bold transition-all disabled:opacity-50 ${
-                  sosStatus === "busy"
-                    ? "bg-amber-500 text-slate-950 font-black"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                }`}
-              >
-                Busy
-              </button>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center bg-slate-200/50 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-850">
+                <button
+                  disabled={statusChanging}
+                  onClick={() => handleStatusChangeClick("offline")}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-bold transition-all disabled:opacity-50 ${
+                    sosStatus === "offline"
+                      ? "bg-slate-300 dark:bg-slate-850 text-slate-950 dark:text-white font-black"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  }`}
+                >
+                  Offline
+                </button>
+                <button
+                  disabled={statusChanging}
+                  onClick={() => handleStatusChangeClick("available")}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-bold transition-all flex items-center gap-1.5 disabled:opacity-50 ${
+                    sosStatus === "available"
+                      ? "bg-green-600 text-white font-black animate-none"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  }`}
+                >
+                  Available
+                </button>
+                <button
+                  disabled={statusChanging}
+                  onClick={() => handleStatusChangeClick("busy")}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-bold transition-all disabled:opacity-50 ${
+                    sosStatus === "busy"
+                      ? "bg-amber-500 text-slate-950 font-black"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  }`}
+                >
+                  Busy
+                </button>
+              </div>
+              {statusChanging && (
+                <Loader2 className="w-4 h-4 animate-spin text-amber-500 dark:text-[#00c2a8] sm:hidden" />
+              )}
             </div>
 
             {/* Active Spinner */}
-            <div className="w-16 flex justify-end">
+            <div className="hidden sm:flex w-16 justify-end">
               {statusChanging && (
                 <Loader2 className="w-4 h-4 animate-spin text-amber-500 dark:text-[#00c2a8]" />
               )}
