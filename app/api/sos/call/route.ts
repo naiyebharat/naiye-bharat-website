@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { pusher } from "@/utils/libs/pusher";
+import { connectDB } from "@/utils/dbConnect";
+import SOSRequest from "@/utils/models/SOSRequest";
+import User from "@/utils/models/User";
+import Advocate from "@/utils/models/advocate";
+import { sendPushNotification } from "@/utils/sendPushNotification";
 
 const JWT_SECRET = process.env.JWT_SECRET || "SUPER_SECRET_PIPELINE_KEY_9999";
+
 
 function getActor(req: NextRequest) {
   const cookies = [
@@ -54,9 +60,44 @@ export async function POST(req: NextRequest) {
       role: actor.role,
     },
     signal,
-    createdAt: new Date().toISOString(),
   });
 
+  if (action === "invite") {
+    try {
+      await connectDB();
+      const sos = await SOSRequest.findById(sosId);
+      if (sos) {
+        let recipientToken = "";
+        const senderName = actor.name || actor.email || actor.role;
+        if (actor.role === "client") {
+          if (sos.lawyerId) {
+            const advocate = await Advocate.findById(sos.lawyerId);
+            if (advocate && advocate.fcmToken) {
+              recipientToken = advocate.fcmToken;
+            }
+          }
+        } else {
+          const client = await User.findById(sos.clientId);
+          if (client && client.fcmToken) {
+            recipientToken = client.fcmToken;
+          }
+        }
+
+        if (recipientToken) {
+          await sendPushNotification(
+            recipientToken,
+            `🚨 EMERGENCY CALL: ${senderName}`,
+            `Incoming SOS ${callType === "audio" ? "Voice" : "Video"} Call. Tap to answer.`,
+            { sosId, type: "sos_call", callType: callType || "video" }
+          );
+        }
+      }
+    } catch (notifErr) {
+      console.error("Failed to send FCM call notification:", notifErr);
+    }
+  }
+
   return NextResponse.json({ success: true, roomId: safeRoomId });
+
 }
 

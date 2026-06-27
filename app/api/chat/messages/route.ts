@@ -6,6 +6,16 @@ import User from "@/utils/models/User";
 import Advocate from "@/utils/models/advocate";
 import { sendPushNotification } from "@/utils/sendPushNotification";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 200, headers: corsHeaders });
+}
+
 // GET /api/chat/messages?roomId=xxx
 export async function GET(req: NextRequest) {
   try {
@@ -14,13 +24,13 @@ export async function GET(req: NextRequest) {
     const roomId = searchParams.get("roomId");
 
     if (!roomId) {
-      return NextResponse.json({ success: false, error: "roomId is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "roomId is required" }, { status: 400, headers: corsHeaders });
     }
 
     const messages = await Message.find({ roomId }).sort({ createdAt: 1 }).lean();
-    return NextResponse.json({ success: true, messages });
+    return NextResponse.json({ success: true, messages }, { headers: corsHeaders });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
 
@@ -32,7 +42,7 @@ export async function POST(req: NextRequest) {
     const { roomId, text, senderType, senderName } = await req.json();
 
     if (!roomId || !text || !senderType || !senderName) {
-      return NextResponse.json({ success: false, error: "roomId, text, senderType, senderName are required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "roomId, text, senderType, senderName are required" }, { status: 400, headers: corsHeaders });
     }
 
     const message = await Message.create({ roomId, text, senderType, senderName });
@@ -67,8 +77,8 @@ export async function POST(req: NextRequest) {
       console.error("Failed to send chat push notification:", notifErr);
     }
 
-    return NextResponse.json({ success: true, message });
+    return NextResponse.json({ success: true, message }, { headers: corsHeaders });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500, headers: corsHeaders });
   }
 }

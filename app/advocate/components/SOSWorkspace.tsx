@@ -11,6 +11,7 @@ interface SOSWorkspaceProps {
   newMessageText: string;
   isChatOpen: boolean;
   isSimulatingTravel: boolean;
+  updatingStatus?: string | null;
   advocateProfile: any;
   chatEndRef: React.RefObject<HTMLDivElement>;
   onSendMessage: (e: React.FormEvent) => void;
@@ -27,6 +28,7 @@ export default function SOSWorkspace({
   newMessageText,
   isChatOpen,
   isSimulatingTravel,
+  updatingStatus,
   advocateProfile,
   chatEndRef,
   onSendMessage,
@@ -231,9 +233,14 @@ export default function SOSWorkspace({
             {activeSOS.status === "accepted" && (
               <button
                 onClick={() => onUpdateSOSStatus("en_route")}
-                className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-2xl text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+                disabled={Boolean(updatingStatus)}
+                className="w-full py-4 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-bold rounded-2xl text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
               >
-                Start Travel <i className="fas fa-car"></i>
+                {updatingStatus === "en_route" ? (
+                  <>Updating Status... <i className="fas fa-circle-notch animate-spin"></i></>
+                ) : (
+                  <>Start Travel <i className="fas fa-car"></i></>
+                )}
               </button>
             )}
 
@@ -241,9 +248,14 @@ export default function SOSWorkspace({
               <div className="space-y-3">
                 <button
                   onClick={() => onUpdateSOSStatus("arrived")}
-                  className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+                  disabled={Boolean(updatingStatus)}
+                  className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-2xl text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
-                  Mark Arrived at Location <i className="fas fa-street-view"></i>
+                  {updatingStatus === "arrived" ? (
+                    <>Confirming Arrival... <i className="fas fa-circle-notch animate-spin"></i></>
+                  ) : (
+                    <>Mark Arrived at Location <i className="fas fa-street-view"></i></>
+                  )}
                 </button>
 
                 <button
@@ -263,9 +275,14 @@ export default function SOSWorkspace({
             {activeSOS.status === "arrived" && (
               <button
                 onClick={() => onUpdateSOSStatus("completed")}
-                className="w-full py-4 bg-green-600 hover:bg-green-700 text-slate-950 font-bold rounded-2xl text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+                disabled={Boolean(updatingStatus)}
+                className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-slate-950 font-bold rounded-2xl text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
               >
-                Complete Incident Support <i className="fas fa-check-double"></i>
+                {updatingStatus === "completed" ? (
+                  <>Completing Incident... <i className="fas fa-circle-notch animate-spin"></i></>
+                ) : (
+                  <>Complete Incident Support <i className="fas fa-check-double"></i></>
+                )}
               </button>
             )}
           </div>

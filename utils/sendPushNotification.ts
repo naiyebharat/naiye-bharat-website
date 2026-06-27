@@ -1,9 +1,11 @@
-import * as admin from "firebase-admin";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getMessaging } from "firebase-admin/messaging";
 import * as path from "path";
 import * as fs from "fs";
 
 // Initialize Firebase Admin SDK once
-if (admin.apps.length === 0) {
+const apps = getApps();
+if (apps.length === 0) {
   try {
     let serviceAccount: any;
 
@@ -17,8 +19,8 @@ if (admin.apps.length === 0) {
       console.log("Firebase Admin SDK loaded from local serviceAccountKey.json.");
     }
 
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+    initializeApp({
+      credential: cert(serviceAccount),
     });
     console.log("Firebase Admin SDK initialized successfully.");
   } catch (error) {
@@ -60,7 +62,8 @@ export async function sendPushNotification(
   };
 
   try {
-    const response = await admin.messaging().send(message);
+    const messaging = getMessaging();
+    const response = await messaging.send(message);
     console.log("Push notification sent successfully:", response);
     return response;
   } catch (error) {

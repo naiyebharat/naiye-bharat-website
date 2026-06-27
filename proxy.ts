@@ -34,6 +34,19 @@ export async function proxy(request: NextRequest) {
   const advocateToken = request.cookies.get("advocate_auth_token")?.value;
   const adminToken    = request.cookies.get("admin_auth_token")?.value;
 
+  if (pathname.startsWith("/api/")) {
+    if (request.method === "OPTIONS") {
+      return new NextResponse(null, {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        },
+      });
+    }
+  }
+
   // ══════════════════════════════════════════════════════════════════════════════
   // ── API ROUTES — return JSON 401/403 (never redirect) ──────────────────────
   // ══════════════════════════════════════════════════════════════════════════════
@@ -140,6 +153,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|img|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|PNG|JPG|JPEG)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|img|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|PNG|JPG|JPEG)$).*)",
   ],
 };

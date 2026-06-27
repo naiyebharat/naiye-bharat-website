@@ -82,6 +82,7 @@ export default function AdvocateDashboardPage() {
 
   // Simulated movement state
   const [isSimulatingTravel, setIsSimulatingTravel] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const travelTimerRef = useRef<any>(null);
 
   // Consultation Rooms state
@@ -414,7 +415,8 @@ export default function AdvocateDashboardPage() {
 
   // Update travel journey status
   const handleUpdateSOSStatus = async (status: string) => {
-    if (!activeSOS) return;
+    if (!activeSOS || updatingStatus) return;
+    setUpdatingStatus(status);
     try {
       const res = await axios.post("/api/sos/update-status", {
         sosId: activeSOS._id,
@@ -435,6 +437,8 @@ export default function AdvocateDashboardPage() {
     } catch (err) {
       console.error(err);
       triggerToast("Update Failed", "Could not sync journey status", "error");
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
@@ -562,6 +566,7 @@ export default function AdvocateDashboardPage() {
           newMessageText={newMessageText}
           isChatOpen={isChatOpen}
           isSimulatingTravel={isSimulatingTravel}
+          updatingStatus={updatingStatus}
           advocateProfile={advocateProfile}
           chatEndRef={chatEndRef}
           onSendMessage={handleSendMessage}
