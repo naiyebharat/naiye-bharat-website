@@ -3,6 +3,7 @@
 import { useState, useEffect} from "react";
 import LoginForm from "./components/LoginForm";
 import SignUpForm from "./components/SignUpForm";
+import ResetPasswordFlow from "./components/ResetPasswordFlow";
 import { seededRandom } from "@/utils/random";
 
 export default function LoginPage() {
@@ -69,16 +70,11 @@ export default function LoginPage() {
           )}
 
           {viewState === "forgot" && (
-            <div className="w-full bg-white dark:bg-[#0d1527] p-10 rounded-3xl shadow-xl text-center border border-slate-300 dark:border-slate-800/80 animate-fadeIn">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white font-serif">Reset Security</h2>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">Enter your work email recovery routing targets.</p>
-              <button
-                onClick={() => setViewState("login")}
-                className="mt-6 text-xs uppercase tracking-widest text-amber-600 dark:text-[#00c2a8] font-bold hover:underline cursor-pointer block mx-auto"
-              >
-                Return to Login
-              </button>
-            </div>
+            <ResetPasswordFlow
+              onSwitchToLogin={() => setViewState("login")}
+              theme={theme}
+              onToggleTheme={handleToggleTheme}
+            />
           )}
 
         </div>

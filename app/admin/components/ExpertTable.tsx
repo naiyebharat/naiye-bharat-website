@@ -12,15 +12,18 @@ import {
   X,
   UserPlus,
   Search,
+  Pencil,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ExpertTable({
   refreshTrigger,
   onAddClick,
+  onEditClick,
 }: {
   refreshTrigger: number;
   onAddClick: () => void;
+  onEditClick: (expert: any) => void;
 }) {
   const [advocates, setAdvocates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,7 +181,16 @@ export default function ExpertTable({
     const nameMatch = adv.name?.toLowerCase().includes(query);
     const emailMatch = adv.email?.toLowerCase().includes(query);
     const phoneMatch = adv.phoneNumber?.toLowerCase().includes(query);
-    const specialtyMatch = adv.specialty?.toLowerCase().includes(query);
+
+    const specialtyStr = Array.isArray(adv.specialty)
+      ? adv.specialty.join(", ")
+      : typeof adv.specialty === "string"
+      ? adv.specialty
+      : adv.specialty
+      ? String(adv.specialty)
+      : "";
+    const specialtyMatch = specialtyStr.toLowerCase().includes(query);
+
     const priceMatch = adv.pricing?.toString().includes(query);
     const expMatch = adv.experience?.toString().includes(query);
     const languageMatch = (
@@ -325,7 +337,7 @@ export default function ExpertTable({
                 <AnimatePresence>
                   {filteredAdvocates.map((adv, idx) => (
                     <motion.tr
-                      key={adv._id || adv.id}
+                      key={adv._id || adv.id || `advocate-${idx}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -50 }}
@@ -370,9 +382,9 @@ export default function ExpertTable({
                       {/* Specialty */}
                       <td className="py-3">
                         <div className="flex flex-wrap gap-1 max-w-[150px]">
-                          {(Array.isArray(adv.specialty) ? adv.specialty : [adv.specialty].filter(Boolean)).map((spec) => (
+                          {(Array.isArray(adv.specialty) ? adv.specialty : [adv.specialty].filter(Boolean)).map((spec, sIdx) => (
                             <span
-                              key={spec}
+                              key={`${spec}-${sIdx}`}
                               className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border uppercase tracking-wide ${
                                 spec.includes("Counselling")
                                   ? "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:border-transparent"
@@ -421,7 +433,16 @@ export default function ExpertTable({
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3 text-right">
+                      <td className="py-3 text-right flex items-center justify-end gap-1">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => onEditClick(adv)}
+                          className="text-slate-400 hover:text-emerald-500 transition-all cursor-pointer p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg inline-block"
+                          title="Edit Advocate Profile"
+                        >
+                          <Pencil className="w-4 h-4 text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-[#00c2a8]" />
+                        </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
@@ -429,6 +450,7 @@ export default function ExpertTable({
                             handleDeleteClick(adv._id || adv.id, adv.name)
                           }
                           className="text-slate-400 hover:text-rose-500 transition-all cursor-pointer p-1.5 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg inline-block"
+                          title="Delete Advocate Profile"
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </motion.button>

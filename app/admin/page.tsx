@@ -10,12 +10,14 @@ import AdminHeader from './components/AdminHeader';
 import ThemeToggle from '../advocate/components/ThemeToggle';
 import OrdersLedger from './components/OrdersLedger';
 import DetailOrderView from "./components/DetailOrderView";
+import EditExpertModal from './components/EditExpertModal';
 
 export default function AdminDashboard() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [selectedEditExpert, setSelectedEditExpert] = useState<any | null>(null);
   const [adminName, setAdminName] = useState<string>("System Admin");
 
   // Fetch dynamic profile details on mount
@@ -103,6 +105,7 @@ export default function AdminDashboard() {
         <ExpertTable 
           refreshTrigger={refreshTrigger} 
           onAddClick={handleAddClick}
+          onEditClick={(expert) => setSelectedEditExpert(expert)}
         />
         
         {/* 🔥 Yahan prop pass kiya taaki click tracking dashboard tak pahunche */}
@@ -115,6 +118,14 @@ export default function AdminDashboard() {
         isOpen={Boolean(selectedOrder)} 
         order={selectedOrder} 
         onClose={() => setSelectedOrder(null)} 
+      />
+
+      {/* Edit Expert Modal Side Drawer */}
+      <EditExpertModal 
+        isOpen={Boolean(selectedEditExpert)} 
+        expert={selectedEditExpert} 
+        onClose={() => setSelectedEditExpert(null)} 
+        onSuccess={handleSuccess} 
       />
 
       {/* Modal Overlay for Form Component Stack */}
