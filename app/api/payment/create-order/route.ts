@@ -59,7 +59,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, order: razorpayOrder, localOrderId: localOrder._id });
+    return NextResponse.json({
+      success: true,
+      order: razorpayOrder,
+      localOrderId: localOrder._id,
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || "",
+    });
   } catch (error: any) {
     console.error("Razorpay order creation crash:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

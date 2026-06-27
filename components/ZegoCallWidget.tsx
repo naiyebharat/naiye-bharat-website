@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import { Mic, Phone, PhoneOff, Video, X } from "lucide-react";
+import { Mic, MicOff, Phone, PhoneOff, Video, VideoOff, X } from "lucide-react";
 import { pusherClient } from "@/utils/libs/pusherClient";
 
 type CallType = "audio" | "video";
@@ -36,8 +36,29 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
   const [joining, setJoining] = useState(false);
   const [errorText, setErrorText] = useState("");
   const [isCallConnected, setIsCallConnected] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isCameraOff, setIsCameraOff] = useState(false);
+
+  const toggleMic = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+      setIsMicMuted((prev) => !prev);
+    }
+  };
+
+  const toggleCamera = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getVideoTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+      setIsCameraOff((prev) => !prev);
+    }
+  };
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
+
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -290,6 +311,9 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
     pendingCandidates.current = [];
     pendingSignals.current = [];
     setIsCallConnected(false);
+    setIsMicMuted(false);
+    setIsCameraOff(false);
+
 
     // Stop streams
     if (localStreamRef.current) {
@@ -433,93 +457,146 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
       )}
 
       {activeCall && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-lg">
-          <div className="w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-wider text-white">
-                  {activeCall.callType === "video" ? "Video Call" : "Voice Call"}
-                </h3>
-                <p className="text-xs font-semibold text-slate-400">Room connected with {peerLabel}</p>
-              </div>
-              <button type="button" onClick={endCall} className="rounded-xl bg-red-600 p-3 text-white hover:bg-red-700">
-                <PhoneOff className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="grid min-h-[360px] grid-cols-1 gap-3 p-4 md:grid-cols-2">
-              <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900 min-h-[320px] flex items-center justify-center">
-                <video
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  className={`h-full min-h-[320px] w-full object-cover ${isCallConnected ? "block" : "hidden"}`}
-                />
-                {!isCallConnected && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 p-6 text-center">
-                    {user.role === "client" ? (
-                      <div className="flex flex-col items-center justify-center space-y-4">
-                        <div className="relative flex items-center justify-center">
-                          {/* Pulsing ring animation */}
-                          <div className="absolute h-24 w-24 rounded-full bg-emerald-500/20 animate-ping" />
-                          <div className="absolute h-28 w-28 rounded-full border border-emerald-500/30 animate-pulse" />
-                          <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-slate-900 p-3 shadow-xl">
-                            <LogoSVG />
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <h4 className="text-xs font-black text-white uppercase tracking-wider">NaiyeBharat</h4>
-                          <p className="mt-2 text-[10px] font-bold text-emerald-400 tracking-widest uppercase animate-pulse flex items-center gap-1.5 justify-center">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-                            ringing
-                          </p>
-                        </div>
+        <div className="fixed inset-0 z-[90] flex flex-col justify-between bg-slate-950 overflow-hidden select-none">
+          {/* Main Remote Video (Fullscreen Background) */}
+          <div className="absolute inset-0 z-0 bg-slate-900 flex items-center justify-center">
+            <video
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+              className={`absolute inset-0 h-full w-full object-cover ${isCallConnected ? "block" : "hidden"}`}
+            />
+            
+            {/* Ringing / Connecting Overlay */}
+            {!isCallConnected && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 p-6 text-center z-10">
+                {user.role === "client" ? (
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute h-24 w-24 rounded-full bg-emerald-500/20 animate-ping" />
+                      <div className="absolute h-28 w-28 rounded-full border border-emerald-500/30 animate-pulse" />
+                      <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-slate-900 p-3 shadow-xl">
+                        <LogoSVG />
                       </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center space-y-4">
-                        <div className="relative flex items-center justify-center">
-                          {/* Pulsing ring animation */}
-                          <div className="absolute h-24 w-24 rounded-full bg-amber-500/20 animate-ping" />
-                          <div className="absolute h-28 w-28 rounded-full border border-amber-500/30 animate-pulse" />
-                          <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-slate-900 shadow-xl">
-                            <span className="text-3xl font-black text-[#d4af37]">
-                              {(peerLabel || "Client").charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <h4 className="text-xs font-black text-white uppercase tracking-wider">{peerLabel || "Client"}</h4>
-                          <p className="mt-2 text-[10px] font-bold text-amber-400 tracking-widest uppercase animate-pulse flex items-center gap-1.5 justify-center">
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
-                            ringing
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    </div>
+                    <div className="text-center">
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider">NaiyeBharat</h4>
+                      <p className="mt-2 text-[10px] font-bold text-emerald-400 tracking-widest uppercase animate-pulse flex items-center gap-1.5 justify-center">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                        ringing
+                      </p>
+                    </div>
                   </div>
-                )}
-                <div className="absolute bottom-3 left-3 rounded-lg bg-black/50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-                  Remote
-                </div>
-              </div>
-              <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
-                <video ref={localVideoRef} autoPlay playsInline muted className="h-full min-h-[320px] w-full object-cover" />
-                {activeCall.callType === "audio" && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">
-                      <Phone className="h-8 w-8" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute h-24 w-24 rounded-full bg-amber-500/20 animate-ping" />
+                      <div className="absolute h-28 w-28 rounded-full border border-amber-500/30 animate-pulse" />
+                      <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-slate-900 shadow-xl">
+                        <span className="text-3xl font-black text-[#d4af37]">
+                          {(peerLabel || "Client").charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider">{peerLabel || "Client"}</h4>
+                      <p className="mt-2 text-[10px] font-bold text-amber-400 tracking-widest uppercase animate-pulse flex items-center gap-1.5 justify-center">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
+                        ringing
+                      </p>
                     </div>
                   </div>
                 )}
-                <div className="absolute bottom-3 left-3 rounded-lg bg-black/50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-                  You
-                </div>
               </div>
-            </div>
-            {errorText && <div className="border-t border-slate-800 px-5 py-3 text-xs font-bold text-red-400">{errorText}</div>}
+            )}
+
+            {/* Remote Label (when connected) */}
+            {isCallConnected && (
+              <div className="absolute bottom-28 left-4 rounded-lg bg-black/60 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-200 z-10 border border-slate-800">
+                {peerLabel} (Active)
+              </div>
+            )}
           </div>
+
+          {/* Floating Local Video (Top-Right) */}
+          <div className="absolute top-6 right-6 w-28 h-40 rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-slate-950 shadow-2xl z-20">
+            {activeCall.callType === "video" && !isCameraOff ? (
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 gap-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-400">
+                  <VideoOff className="h-4 w-4" />
+                </div>
+                <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">You</span>
+              </div>
+            )}
+            
+            {/* Small Overlay Label */}
+            <div className="absolute bottom-2 left-2 rounded bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest text-slate-300">
+              You
+            </div>
+          </div>
+
+          {/* Call Header Metadata (Top-Left) */}
+          <div className="absolute top-6 left-6 z-10 bg-slate-950/60 backdrop-blur-md border border-slate-800/80 px-4 py-2.5 rounded-2xl max-w-[200px]">
+            <h3 className="text-xs font-black uppercase tracking-widest text-[#d4af37]">
+              {activeCall.callType === "video" ? "Video Session" : "Voice Session"}
+            </h3>
+            <p className="text-[9px] font-bold text-slate-400 mt-0.5 truncate">Room: {activeCall.roomId}</p>
+          </div>
+
+          {/* Bottom Bar Controls (Camera, Mic, End Call) */}
+          <div className="absolute bottom-8 left-0 right-0 z-20 flex justify-center items-center gap-6">
+            {/* Camera Toggle Button */}
+            {activeCall.callType === "video" && (
+              <button
+                type="button"
+                onClick={toggleCamera}
+                className={`flex h-14 w-14 items-center justify-center rounded-full border border-slate-700/50 backdrop-blur-md transition-all ${
+                  isCameraOff ? "bg-red-500/20 border-red-500/50 text-red-400" : "bg-slate-900/80 text-white hover:bg-slate-800"
+                }`}
+              >
+                {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+              </button>
+            )}
+
+            {/* End Call Button */}
+            <button
+              type="button"
+              onClick={endCall}
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-white shadow-lg shadow-red-600/30 hover:bg-red-700 transition-all hover:scale-105"
+            >
+              <PhoneOff className="h-6 w-6" />
+            </button>
+
+            {/* Mic Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleMic}
+              className={`flex h-14 w-14 items-center justify-center rounded-full border border-slate-700/50 backdrop-blur-md transition-all ${
+                isMicMuted ? "bg-red-500/20 border-red-500/50 text-red-400" : "bg-slate-900/80 text-white hover:bg-slate-800"
+              }`}
+            >
+              {isMicMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            </button>
+          </div>
+
+          {errorText && (
+            <div className="absolute bottom-28 left-4 right-4 text-center z-10">
+              <span className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider inline-block">
+                {errorText}
+              </span>
+            </div>
+          )}
         </div>
       )}
+
 
       {errorText && !activeCall && (
         <div className="fixed bottom-5 right-5 z-[100] flex max-w-sm items-center gap-3 rounded-xl border border-red-200 bg-white p-4 text-xs font-bold text-red-600 shadow-xl dark:border-red-900/40 dark:bg-[#0b1329]">

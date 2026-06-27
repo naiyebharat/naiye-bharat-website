@@ -181,7 +181,7 @@ export default function SOSPanel({ requests, activeSosId, messages, loading, use
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {activeSOS.lawyer && (
+              {activeSOS.lawyer && activeSOS.status !== "completed" && activeSOS.status !== "cancelled" && (
                 <ZegoCallWidget
                   sosId={activeSOS.id}
                   user={user}
@@ -263,22 +263,28 @@ export default function SOSPanel({ requests, activeSosId, messages, loading, use
             <div ref={endRef} />
           </div>
 
-          <form onSubmit={handleSubmit} className="p-4 bg-white dark:bg-[#0b1329] border-t border-slate-200 dark:border-slate-800 flex items-center gap-3">
-            <input
-              type="text"
-              value={inputText}
-              onChange={(event) => setInputText(event.target.value)}
-              placeholder="Type emergency message..."
-              className="flex-1 bg-slate-50 dark:bg-[#050b1d] border border-slate-200 dark:border-slate-800/80 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all"
-            />
-            <button
-              type="submit"
-              disabled={!inputText.trim()}
-              className="p-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center flex-shrink-0"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
+          {activeSOS.status !== "completed" && activeSOS.status !== "cancelled" ? (
+            <form onSubmit={handleSubmit} className="p-4 bg-white dark:bg-[#0b1329] border-t border-slate-200 dark:border-slate-800 flex items-center gap-3">
+              <input
+                type="text"
+                value={inputText}
+                onChange={(event) => setInputText(event.target.value)}
+                placeholder="Type emergency message..."
+                className="flex-1 bg-slate-50 dark:bg-[#050b1d] border border-slate-200 dark:border-slate-800/80 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all"
+              />
+              <button
+                type="submit"
+                disabled={!inputText.trim()}
+                className="p-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center flex-shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </form>
+          ) : (
+            <div className="p-4 bg-slate-100 dark:bg-[#0b1329]/20 border-t border-slate-200 dark:border-slate-800 text-center text-xs font-bold text-slate-500 dark:text-slate-400">
+              This SOS emergency has been marked as resolved. Chat and calling features are closed.
+            </div>
+          )}
         </section>
       )}
     </div>

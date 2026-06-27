@@ -100,6 +100,9 @@ export async function GET(req: NextRequest) {
       .sort({ createdAt: 1 })
       .lean() as any[];
 
+    const sos = await SOSRequest.findById(sosId).lean() as any;
+    const status = sos ? sos.status : "pending";
+
     const formatted = messages.map((m) => ({
       id: m._id.toString(),
       senderType: m.senderType,
@@ -108,7 +111,7 @@ export async function GET(req: NextRequest) {
       createdAt: m.createdAt.toISOString(),
     }));
 
-    return NextResponse.json({ success: true, messages: formatted });
+    return NextResponse.json({ success: true, messages: formatted, status });
   } catch (error: any) {
     console.error("SOS Chat History Error:", error);
     return NextResponse.json(
