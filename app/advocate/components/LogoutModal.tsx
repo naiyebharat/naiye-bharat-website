@@ -1,16 +1,28 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, LogOut, X } from "lucide-react";
+import { AlertCircle, LogOut, Loader2, X } from "lucide-react";
 
 interface LogoutModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
 }
 
 export default function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleConfirm = async () => {
+    setIsLoggingOut(true);
+    try {
+      await onConfirm();
+    } catch (err) {
+      console.error(err);
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -20,7 +32,7 @@ export default function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalP
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={() => !isLoggingOut && onClose()}
             className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm dark:bg-black/75"
           />
           
@@ -43,17 +55,29 @@ export default function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalP
             <div className="flex items-center justify-end gap-3">
               <button
                 type="button"
+                disabled={isLoggingOut}
                 onClick={onClose}
-                className="px-4 cursor-pointer py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 transition-colors"
+                className="px-4 cursor-pointer py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={onConfirm}
-                className="px-4 py-2 cursor-pointer rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-1.5 shadow-lg shadow-rose-600/20 transition-all"
+                disabled={isLoggingOut}
+                onClick={handleConfirm}
+                className="px-4 py-2 cursor-pointer rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-700 disabled:bg-rose-600/50 text-white flex items-center justify-center gap-1.5 shadow-lg shadow-rose-600/20 transition-all min-w-[96px]"
               >
-                <LogOut className="w-3.5 h-3.5" /> Log Out
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Logging out...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Log Out</span>
+                  </>
+                )}
               </button>
             </div>
           </motion.div>

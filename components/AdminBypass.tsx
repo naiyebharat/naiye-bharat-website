@@ -14,7 +14,8 @@ export default function AdminBypass({ children }: { children: React.ReactNode })
     pathname?.startsWith('/admin') || 
     pathname?.startsWith('/counseling') || 
     pathname?.startsWith('/advocate') ||
-    pathname?.startsWith('/client'); 
+    pathname?.startsWith('/client') ||
+    pathname?.startsWith('/mobile-call');
 
   if (shouldBypass) {
     // Admin, Counseling, Advocate, Client portals aur Auth pages par purely clean screen render hogi
