@@ -53,18 +53,26 @@ export async function POST(req: NextRequest) {
 
     if (activeSOS) {
       // Trigger dynamic Uber-like tracking for the client
-      await pusher.trigger(`sos-${activeSOS._id}`, "location-update", {
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
-      });
+      try {
+        await pusher.trigger(`sos-${activeSOS._id}`, "location-update", {
+          lat: parseFloat(lat),
+          lng: parseFloat(lng),
+        });
+      } catch (err) {
+        console.error("Failed to trigger Pusher location-update for client:", err);
+      }
 
       // Trigger tracking for admin
-      await pusher.trigger("admin-sos", "lawyer-location", {
-        sosId: activeSOS._id.toString(),
-        lawyerId: lawyerId.toString(),
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
-      });
+      try {
+        await pusher.trigger("admin-sos", "lawyer-location", {
+          sosId: activeSOS._id.toString(),
+          lawyerId: lawyerId.toString(),
+          lat: parseFloat(lat),
+          lng: parseFloat(lng),
+        });
+      } catch (err) {
+        console.error("Failed to trigger Pusher lawyer-location for admin:", err);
+      }
     }
 
     return NextResponse.json({

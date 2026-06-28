@@ -148,6 +148,7 @@ export default function ClientPortal() {
     }
 
     loadChatHistory();
+    const pollInterval = setInterval(loadChatHistory, 3000);
 
     // Subscribe for real-time new messages
     const channel = pusherClient.subscribe(`sos-${activeSosId}`);
@@ -194,6 +195,7 @@ export default function ClientPortal() {
     });
 
     return () => {
+      clearInterval(pollInterval);
       pusherClient.unsubscribe(`sos-${activeSosId}`);
     };
   }, [activeSosId]);
@@ -274,7 +276,7 @@ export default function ClientPortal() {
     if (!activeSosId) return;
 
     try {
-      await fetch("/api/sos/chat", {
+      const response = await fetch("/api/sos/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -284,6 +286,22 @@ export default function ClientPortal() {
           text,
         }),
       });
+      const data = await response.json();
+      if (data.success && data.message) {
+        setSosMessages((prev) => {
+          if (prev.some((m) => m.id === data.message.id)) return prev;
+          return [
+            ...prev,
+            {
+              id: data.message.id,
+              senderType: data.message.senderType,
+              senderName: data.message.senderName,
+              text: data.message.text,
+              createdAt: data.message.createdAt,
+            },
+          ];
+        });
+      }
     } catch (err) {
       console.error("Failed to send SOS message:", err);
       setToast({

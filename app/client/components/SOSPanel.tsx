@@ -181,7 +181,7 @@ export default function SOSPanel({ requests, activeSosId, messages, loading, use
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {activeSOS.lawyer && activeSOS.status !== "completed" && activeSOS.status !== "cancelled" && (
+              {activeSOS.lawyer && activeSOS.status !== "completed" && activeSOS.status !== "cancelled" && activeSOS.status !== "pending" && (
                 <ZegoCallWidget
                   sosId={activeSOS.id}
                   user={user}

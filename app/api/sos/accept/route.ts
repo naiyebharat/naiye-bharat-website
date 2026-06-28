@@ -60,26 +60,34 @@ export async function POST(req: NextRequest) {
     await advocate.save();
 
     // Trigger Pusher notification for Client
-    await pusher.trigger(`sos-${sosId}`, "status-update", {
-      status: "accepted",
-      lawyer: {
-        id: advocate._id.toString(),
-        name: advocate.name,
-        phoneNumber: advocate.phoneNumber,
-        experience: advocate.experience,
-        specialty: advocate.specialty,
-        avatar: advocate.avatar || "",
-        currentLocation: advocate.currentLocation,
-      },
-      eta: "12 mins",
-    });
+    try {
+      await pusher.trigger(`sos-${sosId}`, "status-update", {
+        status: "accepted",
+        lawyer: {
+          id: advocate._id.toString(),
+          name: advocate.name,
+          phoneNumber: advocate.phoneNumber,
+          experience: advocate.experience,
+          specialty: advocate.specialty,
+          avatar: advocate.avatar || "",
+          currentLocation: advocate.currentLocation,
+        },
+        eta: "12 mins",
+      });
+    } catch (err) {
+      console.error("Failed to trigger Pusher status-update for client:", err);
+    }
 
     // Trigger Pusher notification for Admin
-    await pusher.trigger("admin-sos", "sos-updated", {
-      sosId: sos._id.toString(),
-      status: "accepted",
-      lawyerId: lawyerId.toString(),
-    });
+    try {
+      await pusher.trigger("admin-sos", "sos-updated", {
+        sosId: sos._id.toString(),
+        status: "accepted",
+        lawyerId: lawyerId.toString(),
+      });
+    } catch (err) {
+      console.error("Failed to trigger Pusher sos-updated for admin:", err);
+    }
 
     return NextResponse.json({
       success: true,

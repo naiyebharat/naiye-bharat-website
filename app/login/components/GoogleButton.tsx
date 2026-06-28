@@ -11,6 +11,14 @@ interface GoogleButtonProps {
 
 export default function GoogleButton({ theme, showToast, setServerError }: GoogleButtonProps) {
   const buttonRef = useRef<HTMLDivElement>(null);
+  const showToastRef = useRef(showToast);
+  const setServerErrorRef = useRef(setServerError);
+
+  // Keep refs up-to-date with latest callback implementations
+  useEffect(() => {
+    showToastRef.current = showToast;
+    setServerErrorRef.current = setServerError;
+  });
 
   useEffect(() => {
     const initializeGoogleSignIn = () => {
@@ -21,23 +29,23 @@ export default function GoogleButton({ theme, showToast, setServerError }: Googl
           // Next.js mein frontend par env use karne ke liye NEXT_PUBLIC_ lagana zaroori hai
           client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
           callback: async (response: any) => {
-            setServerError("");
+            setServerErrorRef.current("");
             try {
-              showToast("Verifying... please wait 🚀", "Authenticating with Google", "info");
+              showToastRef.current("Verifying... please wait 🚀", "Authenticating with Google", "info");
               
               const res = await axios.post("/api/auth/google", {
                 token: response.credential, // idToken backend ko bhej rahe hain
               });
 
               if (res.data.success) {
-                showToast("Welcome! 🎉", "Redirecting to your dashboard...", "success");
+                showToastRef.current("Welcome! 🎉", "Redirecting to your dashboard...", "success");
                 setTimeout(() => {
                   window.location.href = res.data.redirect;
                 }, 500);
               }
             } catch (error: any) {
               const msg = error.response?.data?.error || "Google Authentication failed.";
-              setServerError(msg);
+              setServerErrorRef.current(msg);
             }
           },
         });
@@ -65,7 +73,7 @@ export default function GoogleButton({ theme, showToast, setServerError }: Googl
     } else {
       initializeGoogleSignIn();
     }
-  }, [theme, setServerError, showToast]);
+  }, [theme]);
 
   return (
     <div className="w-full flex justify-center pt-2">

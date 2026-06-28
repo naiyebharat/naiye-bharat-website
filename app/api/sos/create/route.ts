@@ -92,14 +92,18 @@ export async function POST(req: Request) {
     await sos.save();
 
     // 3. Broadcast the SOS alert via Pusher
-    await pusher.trigger("lawyers", "new-sos", {
-      sosId: sos._id.toString(),
-      emergencyType,
-      lat,
-      lng,
-      payout: 3600,
-      targetLawyers: targetLawyerIds,
-    });
+    try {
+      await pusher.trigger("lawyers", "new-sos", {
+        sosId: sos._id.toString(),
+        emergencyType,
+        lat,
+        lng,
+        payout: 3600,
+        targetLawyers: targetLawyerIds,
+      });
+    } catch (err) {
+      console.error("Failed to broadcast new SOS via Pusher:", err);
+    }
 
     // 4. Dispatch Firebase Push Notifications to all target advocates
     for (const lawyer of nearestLawyers) {

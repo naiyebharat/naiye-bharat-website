@@ -53,15 +53,23 @@ export async function POST(req: NextRequest) {
     await sos.save();
 
     // Trigger Pusher notification for Client
-    await pusher.trigger(`sos-${sosId}`, "status-update", {
-      status,
-    });
+    try {
+      await pusher.trigger(`sos-${sosId}`, "status-update", {
+        status,
+      });
+    } catch (err) {
+      console.error("Failed to trigger Pusher status-update for client:", err);
+    }
 
     // Trigger Pusher notification for Admin
-    await pusher.trigger("admin-sos", "sos-updated", {
-      sosId: sos._id.toString(),
-      status,
-    });
+    try {
+      await pusher.trigger("admin-sos", "sos-updated", {
+        sosId: sos._id.toString(),
+        status,
+      });
+    } catch (err) {
+      console.error("Failed to trigger Pusher sos-updated for admin:", err);
+    }
 
     return NextResponse.json({
       success: true,

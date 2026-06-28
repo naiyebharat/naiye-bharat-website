@@ -299,6 +299,24 @@ export default function AdvocateDashboardPage() {
     };
   }, [advocateProfile?.id]);
 
+  // Fetch existing chat messages when active SOS becomes active
+  useEffect(() => {
+    if (!activeSOS?._id) return;
+    const fetchChatHistory = async () => {
+      try {
+        const res = await axios.get(`/api/sos/chat?sosId=${activeSOS._id}`);
+        if (res.data.success && res.data.messages) {
+          setMessages(res.data.messages);
+        }
+      } catch (err) {
+        console.error("Failed to load SOS chat history:", err);
+      }
+    };
+    fetchChatHistory();
+    const interval = setInterval(fetchChatHistory, 3000);
+    return () => clearInterval(interval);
+  }, [activeSOS?._id]);
+
   // Subscribe to specific SOS channel messages/updates when active
   useEffect(() => {
     if (!activeSOS) return;
@@ -370,8 +388,6 @@ export default function AdvocateDashboardPage() {
   const confirmStatusChange = async () => {
     if (!pendingStatus) return;
     const nextStatus = pendingStatus;
-    setShowStatusConfirm(false);
-    setPendingStatus(null);
     setStatusChanging(true);
     try {
       setSosStatus(nextStatus);
@@ -381,6 +397,8 @@ export default function AdvocateDashboardPage() {
         sosStatus: nextStatus,
       });
       triggerToast("Status Updated", `Your SOS availability status is now ${nextStatus.toUpperCase()}`, "success");
+      setShowStatusConfirm(false);
+      setPendingStatus(null);
     } catch (err) {
       console.error(err);
       triggerToast("Update Failed", "Could not synchronize status with server", "error");
@@ -448,12 +466,18 @@ export default function AdvocateDashboardPage() {
     if (!newMessageText.trim() || !activeSOS || !advocateProfile) return;
 
     try {
-      await axios.post("/api/sos/chat", {
+      const res = await axios.post("/api/sos/chat", {
         sosId: activeSOS._id,
         senderType: "expert",
         senderName: advocateProfile.name,
         text: newMessageText.trim(),
       });
+      if (res.data.success && res.data.message) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === res.data.message.id)) return prev;
+          return [...prev, res.data.message];
+        });
+      }
       setNewMessageText("");
     } catch (err) {
       console.error(err);
@@ -537,20 +561,29 @@ export default function AdvocateDashboardPage() {
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
+                disabled={statusChanging}
                 onClick={() => {
                   setShowStatusConfirm(false);
                   setPendingStatus(null);
                 }}
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900"
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
+                disabled={statusChanging}
                 onClick={confirmStatusChange}
-                className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black uppercase tracking-wider text-white hover:bg-emerald-700 dark:bg-[#00c2a8] dark:text-[#050b1d]"
+                className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black uppercase tracking-wider text-white hover:bg-emerald-700 dark:bg-[#00c2a8] dark:text-[#050b1d] disabled:opacity-60 flex items-center justify-center gap-1.5"
               >
-                Confirm
+                {statusChanging ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Updating...</span>
+                  </>
+                ) : (
+                  <span>Confirm</span>
+                )}
               </button>
             </div>
           </div>

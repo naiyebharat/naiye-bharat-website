@@ -27,10 +27,20 @@ interface ZegoCallWidgetProps {
     role: Role;
   } | null;
   peerLabel?: string;
-  compact?: boolean;
+  autoStart?: boolean;
+  autoAccept?: boolean;
+  callType?: "video" | "audio" | null;
 }
 
-export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", compact = false }: ZegoCallWidgetProps) {
+export default function ZegoCallWidget({
+  sosId,
+  user,
+  peerLabel = "SOS party",
+  compact = false,
+  autoStart = false,
+  autoAccept = false,
+  callType = null,
+}: ZegoCallWidgetProps) {
   const [incomingCall, setIncomingCall] = useState<CallInvite | null>(null);
   const [activeCall, setActiveCall] = useState<CallInvite | null>(null);
   const [joining, setJoining] = useState(false);
@@ -70,6 +80,31 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
 
   const roomId = useMemo(() => (sosId ? `sos_${sosId.replace(/[^a-zA-Z0-9_-]/g, "")}` : ""), [sosId]);
   const isCaller = useRef(false);
+  const [isStartingCall, setIsStartingCall] = useState(false);
+  const hasAutoTriggered = useRef(false);
+
+  useEffect(() => {
+    if (!sosId || !user || !roomId || hasAutoTriggered.current) return;
+
+    if (autoStart && callType) {
+      hasAutoTriggered.current = true;
+      isCaller.current = true;
+      startCall(callType);
+    } else if (autoAccept && callType) {
+      hasAutoTriggered.current = true;
+      const dummyInvite: CallInvite = {
+        sosId,
+        roomId,
+        callType,
+        from: {
+          id: "peer",
+          name: peerLabel,
+          role: user.role === "client" ? "advocate" : "client",
+        },
+      };
+      acceptCall(dummyInvite);
+    }
+  }, [sosId, user, roomId, autoStart, autoAccept, callType]);
 
   const handleWebRTCSignal = async (signal: any, from: { id: string }) => {
     const pc = pcRef.current;
@@ -198,6 +233,7 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
     const channel = pusherClient.subscribe(`sos-${sosId}`);
     
     channel.bind("call-invite", (invite: CallInvite) => {
+      if (isCaller.current) return;
       if (String(invite.from?.id) === String(user.id)) return;
       setIncomingCall(invite);
     });
@@ -253,9 +289,17 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
   const confirmStartCall = async () => {
     if (!pendingCallType) return;
     const type = pendingCallType;
-    setShowConfirmModal(false);
-    setPendingCallType(null);
-    await startCall(type);
+    setIsStartingCall(true);
+    try {
+      await startCall(type);
+      setShowConfirmModal(false);
+      setPendingCallType(null);
+    } catch (err) {
+      console.error("Failed to initiate call:", err);
+      setErrorText("Failed to establish WebRTC handshake.");
+    } finally {
+      setIsStartingCall(false);
+    }
   };
 
   const startCall = async (callType: CallType) => {
@@ -330,6 +374,16 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
 
     setActiveCall(null);
+    setIncomingCall(null);
+    setJoining(false);
+
+    if (typeof window !== "undefined" && (window as any).ReactNativeWebView) {
+      try {
+        (window as any).ReactNativeWebView.postMessage(JSON.stringify({ action: "call-ended" }));
+      } catch (e) {
+        console.error("Failed to postMessage to ReactNativeWebView:", e);
+      }
+    }
   };
 
   const endCall = async () => {
@@ -407,16 +461,28 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
                   setShowConfirmModal(false);
                   setPendingCallType(null);
                 }}
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900"
+                disabled={isStartingCall}
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={confirmStartCall}
-                className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black uppercase tracking-wider text-white hover:bg-emerald-700 dark:bg-[#00c2a8] dark:text-[#050b1d]"
+                disabled={isStartingCall}
+                className={`flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black uppercase tracking-wider text-white hover:bg-emerald-700 dark:bg-[#00c2a8] dark:text-[#050b1d] flex items-center justify-center gap-2 ${isStartingCall ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                Call
+                {isStartingCall ? (
+                  <>
+                    <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Calling</span>
+                  </>
+                ) : (
+                  "Call"
+                )}
               </button>
             </div>
           </div>
@@ -457,9 +523,9 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
       )}
 
       {activeCall && (
-        <div className="fixed inset-0 z-[90] flex flex-col justify-between bg-slate-950 overflow-hidden select-none">
+        <div className="fixed inset-0 z-[90] flex flex-col justify-between bg-slate-50 overflow-hidden select-none">
           {/* Main Remote Video (Fullscreen Background) */}
-          <div className="absolute inset-0 z-0 bg-slate-900 flex items-center justify-center">
+          <div className="absolute inset-0 z-0 bg-slate-100 flex items-center justify-center">
             <video
               ref={remoteVideoRef}
               autoPlay
@@ -469,19 +535,19 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
             
             {/* Ringing / Connecting Overlay */}
             {!isCallConnected && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 p-6 text-center z-10">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 p-6 text-center z-10">
                 {user.role === "client" ? (
                   <div className="flex flex-col items-center justify-center space-y-4">
                     <div className="relative flex items-center justify-center">
                       <div className="absolute h-24 w-24 rounded-full bg-emerald-500/20 animate-ping" />
                       <div className="absolute h-28 w-28 rounded-full border border-emerald-500/30 animate-pulse" />
-                      <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-slate-900 p-3 shadow-xl">
+                      <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-white p-3 shadow-xl">
                         <LogoSVG />
                       </div>
                     </div>
                     <div className="text-center">
-                      <h4 className="text-xs font-black text-white uppercase tracking-wider">NaiyeBharat</h4>
-                      <p className="mt-2 text-[10px] font-bold text-emerald-400 tracking-widest uppercase animate-pulse flex items-center gap-1.5 justify-center">
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">NaiyeBharat</h4>
+                      <p className="mt-2 text-[10px] font-bold text-emerald-600 tracking-widest uppercase animate-pulse flex items-center gap-1.5 justify-center">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
                         ringing
                       </p>
@@ -492,15 +558,15 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
                     <div className="relative flex items-center justify-center">
                       <div className="absolute h-24 w-24 rounded-full bg-amber-500/20 animate-ping" />
                       <div className="absolute h-28 w-28 rounded-full border border-amber-500/30 animate-pulse" />
-                      <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-slate-900 shadow-xl">
+                      <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-white shadow-xl">
                         <span className="text-3xl font-black text-[#d4af37]">
                           {(peerLabel || "Client").charAt(0).toUpperCase()}
                         </span>
                       </div>
                     </div>
                     <div className="text-center">
-                      <h4 className="text-xs font-black text-white uppercase tracking-wider">{peerLabel || "Client"}</h4>
-                      <p className="mt-2 text-[10px] font-bold text-amber-400 tracking-widest uppercase animate-pulse flex items-center gap-1.5 justify-center">
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{peerLabel || "Client"}</h4>
+                      <p className="mt-2 text-[10px] font-bold text-amber-600 tracking-widest uppercase animate-pulse flex items-center gap-1.5 justify-center">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
                         ringing
                       </p>
@@ -509,17 +575,17 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
                 )}
               </div>
             )}
-
+ 
             {/* Remote Label (when connected) */}
             {isCallConnected && (
-              <div className="absolute bottom-28 left-4 rounded-lg bg-black/60 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-200 z-10 border border-slate-800">
+              <div className="absolute bottom-28 left-4 rounded-lg bg-white/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-800 z-10 border border-slate-200 shadow-md">
                 {peerLabel} (Active)
               </div>
             )}
           </div>
-
+ 
           {/* Floating Local Video (Top-Right) */}
-          <div className="absolute top-6 right-6 w-28 h-40 rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-slate-950 shadow-2xl z-20">
+          <div className="absolute top-6 right-6 w-28 h-40 rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-100 shadow-2xl z-20">
             {activeCall.callType === "video" && !isCameraOff ? (
               <video
                 ref={localVideoRef}
@@ -529,8 +595,8 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 gap-1">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-400">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-200 gap-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white border border-slate-300 text-slate-400">
                   <VideoOff className="h-4 w-4" />
                 </div>
                 <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">You</span>
@@ -542,15 +608,15 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
               You
             </div>
           </div>
-
+ 
           {/* Call Header Metadata (Top-Left) */}
-          <div className="absolute top-6 left-6 z-10 bg-slate-950/60 backdrop-blur-md border border-slate-800/80 px-4 py-2.5 rounded-2xl max-w-[200px]">
+          <div className="absolute top-6 left-6 z-10 bg-white/90 backdrop-blur-md border border-slate-200 px-4 py-2.5 rounded-2xl max-w-[200px] shadow-md">
             <h3 className="text-xs font-black uppercase tracking-widest text-[#d4af37]">
               {activeCall.callType === "video" ? "Video Session" : "Voice Session"}
             </h3>
-            <p className="text-[9px] font-bold text-slate-400 mt-0.5 truncate">Room: {activeCall.roomId}</p>
+            <p className="text-[9px] font-bold text-slate-500 mt-0.5 truncate">Room: {activeCall.roomId}</p>
           </div>
-
+ 
           {/* Bottom Bar Controls (Camera, Mic, End Call) */}
           <div className="absolute bottom-8 left-0 right-0 z-20 flex justify-center items-center gap-6">
             {/* Camera Toggle Button */}
@@ -558,14 +624,14 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
               <button
                 type="button"
                 onClick={toggleCamera}
-                className={`flex h-14 w-14 items-center justify-center rounded-full border border-slate-700/50 backdrop-blur-md transition-all ${
-                  isCameraOff ? "bg-red-500/20 border-red-500/50 text-red-400" : "bg-slate-900/80 text-white hover:bg-slate-800"
+                className={`flex h-14 w-14 items-center justify-center rounded-full border transition-all shadow-md ${
+                  isCameraOff ? "bg-red-500/10 border-red-200 text-red-500 hover:bg-red-50" : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
                 }`}
               >
                 {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
               </button>
             )}
-
+ 
             {/* End Call Button */}
             <button
               type="button"
@@ -574,22 +640,22 @@ export default function ZegoCallWidget({ sosId, user, peerLabel = "SOS party", c
             >
               <PhoneOff className="h-6 w-6" />
             </button>
-
+ 
             {/* Mic Toggle Button */}
             <button
               type="button"
               onClick={toggleMic}
-              className={`flex h-14 w-14 items-center justify-center rounded-full border border-slate-700/50 backdrop-blur-md transition-all ${
-                isMicMuted ? "bg-red-500/20 border-red-500/50 text-red-400" : "bg-slate-900/80 text-white hover:bg-slate-800"
+              className={`flex h-14 w-14 items-center justify-center rounded-full border transition-all shadow-md ${
+                isMicMuted ? "bg-red-500/10 border-red-200 text-red-500 hover:bg-red-50" : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
               }`}
             >
               {isMicMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </button>
           </div>
-
+ 
           {errorText && (
             <div className="absolute bottom-28 left-4 right-4 text-center z-10">
-              <span className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider inline-block">
+              <span className="bg-red-500/10 border border-red-500/20 text-red-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider inline-block">
                 {errorText}
               </span>
             </div>
