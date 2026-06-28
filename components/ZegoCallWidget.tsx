@@ -27,6 +27,7 @@ interface ZegoCallWidgetProps {
     role: Role;
   } | null;
   peerLabel?: string;
+  compact?: boolean;
   autoStart?: boolean;
   autoAccept?: boolean;
   callType?: "video" | "audio" | null;
