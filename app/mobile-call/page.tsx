@@ -13,6 +13,10 @@ function MobileCallContent() {
   const role = (searchParams.get("role") || "client") as "admin" | "advocate" | "client";
   const peerLabel = searchParams.get("peerLabel") || "Responder";
 
+  const autoStart = searchParams.get("autoStart") === "true";
+  const autoAccept = searchParams.get("autoAccept") === "true";
+  const callType = searchParams.get("callType") as "video" | "audio" | null;
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -21,7 +25,7 @@ function MobileCallContent() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#050b1d] text-slate-400">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 text-slate-400">
         <Scale className="h-10 w-10 animate-pulse text-[#d4af37]" />
         <span className="mt-4 text-xs font-bold uppercase tracking-widest">Initializing...</span>
       </div>
@@ -30,9 +34,9 @@ function MobileCallContent() {
 
   if (!sosId || !userId) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#050b1d] p-6 text-center text-red-400">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center text-red-500">
         <span className="text-xs font-bold uppercase tracking-widest">Invalid Session Parameters</span>
-        <p className="mt-2 text-[10px] text-slate-500 font-semibold uppercase">Missing sosId or userId</p>
+        <p className="mt-2 text-[10px] text-slate-450 font-semibold uppercase">Missing sosId or userId</p>
       </div>
     );
   }
@@ -42,6 +46,24 @@ function MobileCallContent() {
     name: name,
     role: role,
   };
+
+  const isAutoCall = autoStart || autoAccept;
+
+  if (isAutoCall) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
+        <ZegoCallWidget
+          sosId={sosId}
+          user={user}
+          peerLabel={peerLabel}
+          compact={false}
+          autoStart={autoStart}
+          autoAccept={autoAccept}
+          callType={callType}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#050b1d] p-6">

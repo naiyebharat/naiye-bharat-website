@@ -114,6 +114,24 @@ export default function EmergencyPage() {
     }
   }, [stage]);
 
+  // Fetch existing chat messages when SOS session becomes active
+  useEffect(() => {
+    if (!sosId) return;
+    const fetchChatHistory = async () => {
+      try {
+        const res = await axios.get(`/api/sos/chat?sosId=${sosId}`);
+        if (res.data.success && res.data.messages) {
+          setMessages(res.data.messages);
+        }
+      } catch (err) {
+        console.error("Failed to load SOS chat history:", err);
+      }
+    };
+    fetchChatHistory();
+    const interval = setInterval(fetchChatHistory, 3000);
+    return () => clearInterval(interval);
+  }, [sosId]);
+
   // Subscribe to Pusher channel when SOS is created
   useEffect(() => {
     if (!sosId) return;
@@ -354,12 +372,18 @@ export default function EmergencyPage() {
     if (!newMessageText.trim() || !sosId || !currentUser) return;
 
     try {
-      await axios.post("/api/sos/chat", {
+      const res = await axios.post("/api/sos/chat", {
         sosId,
         senderType: "client",
         senderName: currentUser.name,
         text: newMessageText.trim(),
       });
+      if (res.data.success && res.data.message) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === res.data.message.id)) return prev;
+          return [...prev, res.data.message];
+        });
+      }
       setNewMessageText("");
     } catch (err) {
       console.error("Send message error:", err);

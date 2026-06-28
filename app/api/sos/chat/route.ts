@@ -38,7 +38,11 @@ export async function POST(req: Request) {
     };
 
     // Broadcast via Pusher for real-time delivery
-    await pusher.trigger(`sos-${sosId}`, "chat-message", messageData);
+    try {
+      await pusher.trigger(`sos-${sosId}`, "chat-message", messageData);
+    } catch (pusherErr) {
+      console.error("Failed to broadcast message via Pusher:", pusherErr);
+    }
 
     // Send push notification to the recipient
     try {

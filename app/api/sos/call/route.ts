@@ -50,17 +50,21 @@ export async function POST(req: NextRequest) {
     eventName = "webrtc-signal";
   }
 
-  await pusher.trigger(`sos-${sosId}`, eventName, {
-    sosId,
-    roomId: safeRoomId,
-    callType: callType === "audio" ? "audio" : "video",
-    from: {
-      id: actor.id,
-      name: actor.name || actor.email || actor.role,
-      role: actor.role,
-    },
-    signal,
-  });
+  try {
+    await pusher.trigger(`sos-${sosId}`, eventName, {
+      sosId,
+      roomId: safeRoomId,
+      callType: callType === "audio" ? "audio" : "video",
+      from: {
+        id: actor.id,
+        name: actor.name || actor.email || actor.role,
+        role: actor.role,
+      },
+      signal,
+    });
+  } catch (err) {
+    console.error("Failed to trigger WebRTC Pusher signal:", err);
+  }
 
   if (action === "invite") {
     try {
@@ -88,7 +92,7 @@ export async function POST(req: NextRequest) {
             recipientToken,
             `🚨 EMERGENCY CALL: ${senderName}`,
             `Incoming SOS ${callType === "audio" ? "Voice" : "Video"} Call. Tap to answer.`,
-            { sosId, type: "sos_call", callType: callType || "video" }
+            { sosId, type: "sos_call", callType: callType || "video", senderId: actor.id }
           );
         }
       }
