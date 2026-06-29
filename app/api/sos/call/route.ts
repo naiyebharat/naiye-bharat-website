@@ -6,9 +6,9 @@ import SOSRequest from "@/utils/models/SOSRequest";
 import User from "@/utils/models/User";
 import Advocate from "@/utils/models/advocate";
 import { sendPushNotification } from "@/utils/sendPushNotification";
+import CallSignal from "@/utils/models/CallSignal";
 
 const JWT_SECRET = process.env.JWT_SECRET || "SUPER_SECRET_PIPELINE_KEY_9999";
-
 
 function getActor(req: NextRequest) {
   const cookies = [
@@ -20,6 +20,14 @@ function getActor(req: NextRequest) {
   for (const token of cookies) {
     try {
       return jwt.verify(token, JWT_SECRET) as any;
+    } catch {}
+  }
+
+  // Also try Authorization header (for React Native which sends token in header)
+  const authHeader = req.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    try {
+      return jwt.verify(authHeader.slice(7), JWT_SECRET) as any;
     } catch {}
   }
 
@@ -40,7 +48,24 @@ export async function POST(req: NextRequest) {
   }
 
   const safeRoomId = roomId || `sos_${String(sosId).replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  
+
+  // Store signal in DB for polling clients (React Native)
+  try {
+    await connectDB();
+    await CallSignal.create({
+      sosId,
+      roomId: safeRoomId,
+      action,
+      from: actor.id,
+      signal: signal || null,
+      callType: callType || "video",
+      createdAt: new Date(),
+    });
+  } catch (dbErr) {
+    console.error("Failed to store call signal in DB:", dbErr);
+  }
+
+  // Also trigger Pusher for web clients
   let eventName = "call-invite";
   if (action === "end") {
     eventName = "call-ended";
@@ -68,7 +93,6 @@ export async function POST(req: NextRequest) {
 
   if (action === "invite") {
     try {
-      await connectDB();
       const sos = await SOSRequest.findById(sosId);
       if (sos) {
         let recipientToken = "";
@@ -102,6 +126,48 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ success: true, roomId: safeRoomId });
-
 }
 
+// GET endpoint for React Native polling
+export async function GET(req: NextRequest) {
+  const actor = getActor(req);
+  if (!actor?.id) {
+    return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const sosId = searchParams.get("sosId");
+  const roomId = searchParams.get("roomId");
+  const since = Number(searchParams.get("since") || "0");
+
+  if (!sosId || !roomId) {
+    return NextResponse.json({ success: false, message: "sosId and roomId required" }, { status: 400 });
+  }
+
+  try {
+    await connectDB();
+    const signals = await CallSignal.find({
+      sosId,
+      roomId,
+      createdAt: { $gt: new Date(since) },
+    })
+      .sort({ createdAt: 1 })
+      .limit(20)
+      .lean();
+
+    return NextResponse.json({
+      success: true,
+      signals: signals.map((s: any) => ({
+        id: s._id.toString(),
+        from: s.from,
+        action: s.action,
+        signal: s.signal,
+        callType: s.callType,
+        ts: new Date(s.createdAt).getTime(),
+      })),
+    });
+  } catch (err) {
+    console.error("Failed to fetch call signals:", err);
+    return NextResponse.json({ success: false, signals: [] });
+  }
+}
