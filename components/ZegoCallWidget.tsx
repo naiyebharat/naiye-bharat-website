@@ -113,23 +113,28 @@ export default function ZegoCallWidget({
 
     try {
       if (signal.sdp) {
+        console.log(`[WEB_RTC] Received remote SDP: ${signal.sdp.type}`);
         if (signal.sdp.type === "offer") {
           if (pc.signalingState === "stable") {
             await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+            console.log('[WEB_RTC] Remote description set for offer');
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
+            console.log('[WEB_RTC] Local answer created & set');
             await axios.post("/api/sos/call", {
               sosId,
               action: "signal",
               roomId: signal.roomId || roomId,
               signal: { sdp: pc.localDescription },
             });
+            console.log('[WEB_RTC] Answer sent to backend');
           } else {
             console.warn("Received offer but signalingState is not stable:", pc.signalingState);
           }
         } else if (signal.sdp.type === "answer") {
           if (pc.signalingState === "have-local-offer") {
             await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+            console.log('[WEB_RTC] Remote description set for answer');
           } else {
             console.warn("Received answer but signalingState is not have-local-offer:", pc.signalingState);
           }
@@ -141,6 +146,7 @@ export default function ZegoCallWidget({
           if (cand) await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(() => undefined);
         }
       } else if (signal.candidate) {
+        console.log('[WEB_RTC] Received ICE Candidate');
         if (pc.remoteDescription && pc.remoteDescription.type) {
           await pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(() => undefined);
         } else {
@@ -148,7 +154,7 @@ export default function ZegoCallWidget({
         }
       }
     } catch (err) {
-      console.error("WebRTC signal handling failed:", err);
+      console.error("[WEB_RTC] signal handling failed:", err);
     }
   };
 
@@ -178,9 +184,10 @@ export default function ZegoCallWidget({
         await localVideoRef.current.play().catch(() => undefined);
       }
 
-      stream.getTracks().forEach((track) => {
-        pc.addTrack(track, stream);
-      });
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) pc.addTrack(audioTrack, stream);
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) pc.addTrack(videoTrack, stream);
     } catch (err: any) {
       console.error("Local media capture failed:", err);
       setErrorText("Could not access camera/microphone.");
@@ -240,25 +247,32 @@ export default function ZegoCallWidget({
     });
 
     channel.bind("call-accepted", async (data: CallInvite) => {
+      console.log("[WEB_RTC] Received call-accepted");
       if (String(data.from.id) === String(user.id)) return;
       
       // If we are the caller, we initiate the WebRTC offer when accepted
       if (isCaller.current && pcRef.current) {
-        if (pcRef.current.signalingState !== "stable") {
-          console.warn("Signaling state is not stable, ignoring duplicate call-accepted. State:", pcRef.current.signalingState);
+        const anyPC = pcRef.current as any;
+        if (anyPC.signalingState !== "stable" || anyPC.isNegotiating) {
+          console.warn("[WEB_RTC] Signaling state is not stable or already negotiating, ignoring duplicate call-accepted. State:", anyPC.signalingState);
           return;
         }
+        anyPC.isNegotiating = true;
         try {
+          console.log("[WEB_RTC] Creating offer...");
           const offer = await pcRef.current.createOffer();
           await pcRef.current.setLocalDescription(offer);
+          console.log("[WEB_RTC] Local offer created & set");
           await axios.post("/api/sos/call", {
             sosId,
             action: "signal",
             roomId: data.roomId,
             signal: { sdp: pcRef.current.localDescription },
           });
+          console.log("[WEB_RTC] Offer sent to backend");
         } catch (err) {
-          console.error("Offer creation failed:", err);
+          console.error("[WEB_RTC] Offer creation failed:", err);
+          anyPC.isNegotiating = false;
         }
       }
     });
