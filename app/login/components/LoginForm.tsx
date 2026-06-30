@@ -32,10 +32,11 @@ export default function LoginForm({ onSwitchToSignUp, onSwitchToForgot, theme, o
     password: Yup.string()
       .min(6, "Password must be at least 6 characters.")
       .required("Password is required"),
+    agreedToTerms: Yup.boolean().oneOf([true], "Must accept terms & conditions"),
   });
 
   const formik = useFormik({
-    initialValues: { email: "", password: "" },
+    initialValues: { email: "", password: "", agreedToTerms: false },
     validationSchema: loginSchema,
     onSubmit: async (values, { setSubmitting }) => {
       setServerError("");
@@ -177,10 +178,27 @@ export default function LoginForm({ onSwitchToSignUp, onSwitchToForgot, theme, o
           )}
         </div>
 
+        {/* Terms & Conditions Checkbox */}
+        <div className="flex items-start gap-2.5 my-4 ml-1">
+          <input
+            id="login-terms-checkbox"
+            type="checkbox"
+            checked={formik.values.agreedToTerms || false}
+            onChange={(e) => formik.setFieldValue("agreedToTerms", e.target.checked)}
+            className="w-4.5 h-4.5 mt-0.5 rounded accent-amber-600 dark:accent-[#00c2a8] cursor-pointer"
+          />
+          <label htmlFor="login-terms-checkbox" className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-tight select-none">
+            By continuing, I agree with the{" "}
+            <a href="/privacy" className="text-amber-600 dark:text-[#00c2a8] font-bold hover:underline">
+              terms & conditions
+            </a>
+          </label>
+        </div>
+
         {/* Submit */}
         <button
           type="submit"
-          disabled={formik.isSubmitting || !formik.isValid}
+          disabled={formik.isSubmitting || !formik.isValid || !formik.values.agreedToTerms}
           className="w-full py-4 bg-slate-950 dark:bg-[#00c2a8] text-white dark:text-[#050b1d] font-bold rounded-xl text-center shadow-md hover:shadow-xl transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
           {formik.isSubmitting ? (

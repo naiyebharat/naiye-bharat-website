@@ -53,6 +53,10 @@ export default function PrivacyPage() {
       a: "To book a consultation or trigger the emergency SOS service, users must be at least 18 years of age. By using the platform, you confirm you meet this minimum age requirement."
     },
     {
+      q: "Does booking a consultation guarantee that I will win my case?",
+      a: "No. Booking a consultation through Naiye Bharat provides access to professional legal advice, case analysis, and representation support, but does not guarantee a successful case outcome. Legal proceedings depend on evidence, facts, and judicial discretion. Our matched advocates will work with absolute integrity and try their best to represent you, but we do not guarantee wins or defend unlawful actions."
+    },
+    {
       q: "How do I contact support?",
       a: (
         <div className="space-y-3">
