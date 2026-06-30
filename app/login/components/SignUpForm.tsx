@@ -33,10 +33,11 @@ export default function SignUpForm({ onSwitchToLogin, theme, onToggleTheme }: Si
     otp: isOtpStep
       ? Yup.string().length(6, "OTP must be exactly 6 digits.").required("OTP is required")
       : Yup.string(),
+    agreedToTerms: Yup.boolean().oneOf([true], "Must accept terms & conditions"),
   });
 
   const formik = useFormik({
-    initialValues: { name: "", email: "", password: "", otp: "" },
+    initialValues: { name: "", email: "", password: "", otp: "", agreedToTerms: false },
     validationSchema: signupSchema,
     onSubmit: async (values, { setSubmitting }) => {
       setServerError("");
@@ -268,10 +269,29 @@ export default function SignUpForm({ onSwitchToLogin, theme, onToggleTheme }: Si
           </div>
         )}
 
+        {/* Terms & Conditions Checkbox (Shown only on first step) */}
+        {!isOtpStep && (
+          <div className="flex items-start gap-2.5 my-4 ml-1">
+            <input
+              id="signup-terms-checkbox"
+              type="checkbox"
+              checked={formik.values.agreedToTerms || false}
+              onChange={(e) => formik.setFieldValue("agreedToTerms", e.target.checked)}
+              className="w-4.5 h-4.5 mt-0.5 rounded accent-amber-600 dark:accent-[#00c2a8] cursor-pointer"
+            />
+            <label htmlFor="signup-terms-checkbox" className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-tight select-none">
+              By continuing, I agree with the{" "}
+              <a href="/privacy" className="text-amber-600 dark:text-[#00c2a8] font-bold hover:underline">
+                terms & conditions
+              </a>
+            </label>
+          </div>
+        )}
+
         {/* Submit */}
         <button
           type="submit"
-          disabled={formik.isSubmitting || !formik.isValid}
+          disabled={formik.isSubmitting || !formik.isValid || (!isOtpStep && !formik.values.agreedToTerms)}
           className="w-full py-4 bg-slate-950 dark:bg-[#00c2a8] text-white dark:text-[#050b1d] font-bold rounded-xl text-center shadow-md hover:shadow-xl transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
           {formik.isSubmitting ? (
